@@ -1,0 +1,2105 @@
+<!DOCTYPE html>
+<html lang="ne">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>नेपाली के.बी.सी. - Nepali KBC Game</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for Nepali Devanagari typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Mukta:wght@300;400;600;700;800&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Mukta', 'Poppins', 'sans-serif'],
+                    },
+                    colors: {
+                        kbc: {
+                            dark: '#030712',
+                            card: '#0B1120',
+                            navy: '#0F172A',
+                            blue: '#1E3A8A',
+                            accent: '#3B82F6',
+                            gold: '#F59E0B',
+                            goldHover: '#D97706',
+                            green: '#10B981',
+                            red: '#EF4444',
+                        }
+                    },
+                    boxShadow: {
+                        'gold-glow': '0 0 25px rgba(245, 158, 11, 0.4)',
+                        'blue-glow': '0 0 25px rgba(59, 130, 246, 0.4)',
+                        'green-glow': '0 0 25px rgba(16, 185, 129, 0.6)',
+                        'red-glow': '0 0 25px rgba(239, 68, 68, 0.6)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #030712;
+            color: #F9FAFB;
+            font-family: 'Mukta', 'Poppins', sans-serif;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        /* TV Studio Background & Spotlights */
+        .studio-bg {
+            background: radial-gradient(circle at 50% 20%, #1E1B4B 0%, #0F172A 45%, #030712 90%);
+            position: relative;
+        }
+
+        .studio-spotlight {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(ellipse at 20% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 0%, rgba(245, 158, 11, 0.15) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        /* Hexagonal / KBC Style Question & Option Frame */
+        .kbc-frame {
+            position: relative;
+            background: linear-gradient(180deg, #0F172A 0%, #020617 100%);
+            border: 2px solid #3B82F6;
+            border-radius: 1rem;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3), inset 0 0 15px rgba(59, 130, 246, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .kbc-frame::before, .kbc-frame::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 10px;
+            height: 2px;
+            background: #3B82F6;
+            box-shadow: 0 0 8px #3B82F6;
+        }
+        .kbc-frame::before { left: -10px; }
+        .kbc-frame::after { right: -10px; }
+
+        /* Option Button States */
+        .option-btn {
+            background: linear-gradient(180deg, #1E293B 0%, #0F172A 100%);
+            border: 2px solid #3B82F6;
+            color: #F3F4F6;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(.disabled):not(.locked):not(.correct):not(.wrong) {
+            background: linear-gradient(180deg, #1E3A8A 0%, #1E293B 100%);
+            border-color: #60A5FA;
+            box-shadow: 0 0 20px rgba(96, 165, 250, 0.5);
+            transform: translateY(-1px);
+        }
+
+        .option-btn.selected {
+            background: linear-gradient(180deg, #D97706 0%, #B45309 100%) !important;
+            border-color: #F59E0B !important;
+            color: #FFFFFF !important;
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.8) !important;
+            animation: pulse-orange 1s infinite alternate;
+        }
+
+        .option-btn.locked {
+            background: linear-gradient(180deg, #D97706 0%, #78350F 100%) !important;
+            border-color: #F59E0B !important;
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.9) !important;
+            animation: lock-flash 0.4s ease-in-out infinite alternate;
+        }
+
+        .option-btn.correct {
+            background: linear-gradient(180deg, #059669 0%, #047857 100%) !important;
+            border-color: #10B981 !important;
+            color: #FFFFFF !important;
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.9) !important;
+            animation: correct-flash 0.5s ease-in-out 3;
+        }
+
+        .option-btn.wrong {
+            background: linear-gradient(180deg, #DC2626 0%, #991B1B 100%) !important;
+            border-color: #EF4444 !important;
+            color: #FFFFFF !important;
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.9) !important;
+            animation: wrong-shake 0.4s ease-in-out;
+        }
+
+        .option-btn.eliminated {
+            opacity: 0.15;
+            pointer-events: none;
+            border-color: #374151;
+            background: #111827;
+        }
+
+        /* Animations */
+        @keyframes pulse-orange {
+            0% { box-shadow: 0 0 10px rgba(245, 158, 11, 0.4); }
+            100% { box-shadow: 0 0 25px rgba(245, 158, 11, 0.9); }
+        }
+
+        @keyframes lock-flash {
+            0% { opacity: 0.85; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes correct-flash {
+            0%, 100% { background: linear-gradient(180deg, #059669 0%, #047857 100%); }
+            50% { background: linear-gradient(180deg, #34D399 0%, #059669 100%); }
+        }
+
+        @keyframes wrong-shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+
+        /* Lifeline Button Styling */
+        .lifeline-btn {
+            background: radial-gradient(circle, #1E293B 0%, #0F172A 100%);
+            border: 2px solid #3B82F6;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .lifeline-btn:hover:not(:disabled) {
+            transform: scale(1.08);
+            border-color: #F59E0B;
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.6);
+        }
+
+        .lifeline-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            filter: grayscale(100%);
+            border-color: #4B5563;
+            position: relative;
+        }
+
+        .lifeline-btn:disabled::after {
+            content: '✕';
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #EF4444;
+            font-size: 1.75rem;
+            font-weight: bold;
+        }
+
+        /* Ladder styling */
+        .ladder-item {
+            transition: all 0.25s ease;
+        }
+        .ladder-item.active {
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.25) 0%, rgba(245, 158, 11, 0.05) 100%);
+            border-left: 4px solid #F59E0B;
+            color: #F59E0B;
+            font-weight: 700;
+        }
+        .ladder-item.passed {
+            color: #10B981;
+        }
+        .ladder-item.safe {
+            color: #FFFFFF;
+            font-weight: 700;
+        }
+        .ladder-item.safe .badge-safe {
+            background-color: #D97706;
+            color: #FFFFFF;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #090D16;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1E3A8A;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="studio-bg min-h-screen flex flex-col justify-between text-gray-100 antialiased">
+    <div class="studio-spotlight"></div>
+
+    <!-- TOP NAVBAR / HEADER -->
+    <header class="relative z-20 border-b border-gray-800 bg-gray-950/80 backdrop-blur px-4 py-3">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="goToHome()">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 via-amber-500 to-yellow-300 p-0.5 shadow-gold-glow flex items-center justify-center">
+                    <div class="w-full h-full bg-gray-900 rounded-full flex items-center justify-center">
+                        <i class="fa-solid fa-crown text-amber-400 text-lg"></i>
+                    </div>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-black tracking-wide bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 bg-clip-text text-transparent">
+                        नेपाली के.बी.सी.
+                    </h1>
+                    <p class="text-xs text-gray-400 hidden sm:block">को बन्छ करोडपति - नेपाली संस्करण</p>
+                </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="flex items-center space-x-2 sm:space-x-4">
+                <button id="soundToggleBtn" onclick="toggleSound()" class="p-2.5 rounded-xl bg-gray-900 border border-gray-700 text-amber-400 hover:bg-gray-800 transition" title="ध्वनि (Sound)">
+                    <i id="soundIcon" class="fa-solid fa-volume-high"></i>
+                </button>
+                <button onclick="showStatsModal()" class="px-3 py-2 rounded-xl bg-gray-900 border border-gray-700 text-gray-200 hover:bg-gray-800 text-sm font-semibold flex items-center space-x-2">
+                    <i class="fa-solid fa-trophy text-amber-400"></i>
+                    <span class="hidden sm:inline">तथ्याङ्क</span>
+                </button>
+                <button id="ladderMobileToggle" onclick="toggleMobileLadder()" class="lg:hidden px-3 py-2 rounded-xl bg-blue-900/60 border border-blue-500 text-blue-200 text-sm font-semibold flex items-center space-x-1">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <span>पुरस्कार</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="relative z-10 flex-1 max-w-7xl w-full mx-auto p-3 sm:p-4 md:p-6 flex flex-col justify-center">
+
+        <!-- SCREEN 1: WELCOME SCREEN -->
+        <section id="welcomeScreen" class="flex flex-col items-center justify-center text-center py-6 md:py-12 space-y-8 max-w-3xl mx-auto">
+            <!-- Studio Logo Display -->
+            <div class="relative group">
+                <div class="absolute -inset-1 bg-gradient-to-r from-blue-600 to-amber-500 rounded-full blur-xl opacity-50 group-hover:opacity-75 transition duration-1000"></div>
+                <div class="relative w-40 h-40 md:w-52 md:h-52 rounded-full bg-slate-900 border-4 border-amber-400/80 shadow-2xl flex flex-col items-center justify-center p-4">
+                    <i class="fa-solid fa-award text-5xl md:text-6xl text-amber-400 mb-2 animate-bounce"></i>
+                    <span class="text-xl md:text-2xl font-black text-amber-300">के.बी.सी.</span>
+                    <span class="text-xs text-blue-400 font-semibold tracking-widest uppercase">नेपाल</span>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <h2 class="text-3xl md:text-5xl font-extrabold text-white">
+                    नमस्ते र स्वागत छ, <span class="bg-gradient-to-r from-amber-300 to-yellow-500 bg-clip-text text-transparent">नेपाली के.बी.सी.</span> मा!
+                </h2>
+                <p class="text-gray-300 text-base md:text-lg max-w-xl mx-auto leading-relaxed">
+                    नेपालको भूगोल, इतिहास, संस्कृति, साहित्य र सामान्य ज्ञानसम्बन्धी १५ वटा प्रश्नहरूको सही उत्तर दिएर <strong class="text-amber-400">रु. १ करोड</strong> जित्ने अवसर प्राप्त गर्नुहोस्।
+                </p>
+            </div>
+
+            <!-- Key Info Badges -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-xl text-center">
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3">
+                    <p class="text-xs text-gray-400">कूल प्रश्न</p>
+                    <p class="text-lg font-bold text-amber-400">१५ वटा</p>
+                </div>
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3">
+                    <p class="text-xs text-gray-400">सुरक्षित तह</p>
+                    <p class="text-lg font-bold text-blue-400">प्रश्न ५ र १०</p>
+                </div>
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3">
+                    <p class="text-xs text-gray-400">लाइफलाइन</p>
+                    <p class="text-lg font-bold text-amber-400">४ वटा</p>
+                </div>
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3">
+                    <p class="text-xs text-gray-400">सर्वाधिक पुरस्कार</p>
+                    <p class="text-lg font-bold text-emerald-400">रु. १ करोड</p>
+                </div>
+            </div>
+
+            <!-- Start Button -->
+            <div class="pt-4 w-full max-w-xs">
+                <button onclick="startGame()" class="w-full py-4 px-8 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-500 text-gray-950 font-black text-xl shadow-gold-glow hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center space-x-3">
+                    <i class="fa-solid fa-play"></i>
+                    <span>खेल सुरु गर्नुहोस्</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- SCREEN 2: GAMEPLAY SCREEN -->
+        <section id="gameScreen" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+            <!-- LEFT/MAIN COLUMN: Lifelines, Question & Answers -->
+            <div class="lg:col-span-8 flex flex-col space-y-5">
+
+                <!-- TOP BAR: Question Level & Cash Info -->
+                <div class="flex items-center justify-between bg-slate-900/90 border border-slate-800 rounded-2xl p-3 sm:p-4 shadow-lg">
+                    <div class="flex items-center space-x-3">
+                        <span class="w-10 h-10 rounded-xl bg-blue-900/80 border border-blue-500/50 flex items-center justify-center text-blue-300 font-black text-lg" id="currentQNumBadge">
+                            १
+                        </span>
+                        <div>
+                            <p class="text-xs text-gray-400 uppercase tracking-wider">प्रश्न सङ्ख्या</p>
+                            <p class="text-sm sm:text-base font-bold text-white" id="currentQProgress">प्रश्न १ / १५</p>
+                        </div>
+                    </div>
+
+                    <!-- Prize Badge -->
+                    <div class="text-right">
+                        <p class="text-xs text-gray-400 uppercase tracking-wider">दाबी गरिएको रकम</p>
+                        <p class="text-xl sm:text-2xl font-extrabold text-amber-400 tracking-tight" id="currentQValue">
+                            रु. १,०००
+                        </p>
+                    </div>
+
+                    <!-- Quit Button -->
+                    <button onclick="confirmQuit()" class="px-3 py-2 rounded-xl bg-red-950/60 hover:bg-red-900 border border-red-800/80 text-red-300 text-xs sm:text-sm font-semibold transition flex items-center space-x-1" title="रकम लिएर खेल छोड्नुहोस्">
+                        <i class="fa-solid fa-door-open"></i>
+                        <span class="hidden sm:inline">छाड्नुहोस्</span>
+                    </button>
+                </div>
+
+                <!-- LIFELINES ROW -->
+                <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-3 flex items-center justify-around gap-2">
+                    <!-- 50:50 -->
+                    <button id="lifeline-5050" onclick="useLifeline('5050')" class="lifeline-btn flex-1 py-2.5 px-2 rounded-xl flex flex-col items-center justify-center space-y-1" title="५०:५० - दुई गलत उत्तर हटाउनुहोस्">
+                        <span class="text-xs font-extrabold text-amber-300">५०:५०</span>
+                        <span class="text-[10px] text-gray-400 hidden sm:block">५०:५०</span>
+                    </button>
+
+                    <!-- Audience Poll -->
+                    <button id="lifeline-poll" onclick="useLifeline('poll')" class="lifeline-btn flex-1 py-2.5 px-2 rounded-xl flex flex-col items-center justify-center space-y-1" title="दर्शक सर्वेक्षण - दर्शकको मत हेर्नुहोस्">
+                        <i class="fa-solid fa-chart-bar text-amber-400 text-sm"></i>
+                        <span class="text-[10px] text-gray-300 hidden sm:block">दर्शक सर्वेक्षण</span>
+                    </button>
+
+                    <!-- Phone a Friend -->
+                    <button id="lifeline-phone" onclick="useLifeline('phone')" class="lifeline-btn flex-1 py-2.5 px-2 rounded-xl flex flex-col items-center justify-center space-y-1" title="साथीलाई फोन - परामर्श लिनुहोस्">
+                        <i class="fa-solid fa-phone text-amber-400 text-sm"></i>
+                        <span class="text-[10px] text-gray-300 hidden sm:block">साथीलाई फोन</span>
+                    </button>
+
+                    <!-- Ask Expert -->
+                    <button id="lifeline-expert" onclick="useLifeline('expert')" class="lifeline-btn flex-1 py-2.5 px-2 rounded-xl flex flex-col items-center justify-center space-y-1" title="विशेषज्ञको सल्लाह">
+                        <i class="fa-solid fa-user-graduate text-amber-400 text-sm"></i>
+                        <span class="text-[10px] text-gray-300 hidden sm:block">विशेषज्ञ</span>
+                    </button>
+                </div>
+
+                <!-- QUESTION BOX -->
+                <div class="kbc-frame p-5 sm:p-7 min-h-[140px] sm:min-h-[160px] flex items-center justify-center text-center my-2">
+                    <h3 id="questionText" class="text-lg sm:text-xl md:text-2xl font-bold text-white leading-relaxed">
+                        प्रश्न लोड हुँदैछ...
+                    </h3>
+                </div>
+
+                <!-- ANSWER OPTIONS GRID -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
+                    <!-- Option A -->
+                    <button id="opt-0" onclick="selectOption(0)" class="option-btn rounded-xl p-4 text-left flex items-center space-x-3 group">
+                        <span class="w-8 h-8 rounded-lg bg-blue-950 border border-blue-600/60 flex items-center justify-center font-bold text-amber-400 text-sm group-hover:border-amber-400 transition">A</span>
+                        <span id="opt-text-0" class="text-base sm:text-lg font-semibold flex-1 text-gray-100">विकल्प A</span>
+                    </button>
+
+                    <!-- Option B -->
+                    <button id="opt-1" onclick="selectOption(1)" class="option-btn rounded-xl p-4 text-left flex items-center space-x-3 group">
+                        <span class="w-8 h-8 rounded-lg bg-blue-950 border border-blue-600/60 flex items-center justify-center font-bold text-amber-400 text-sm group-hover:border-amber-400 transition">B</span>
+                        <span id="opt-text-1" class="text-base sm:text-lg font-semibold flex-1 text-gray-100">विकल्प B</span>
+                    </button>
+
+                    <!-- Option C -->
+                    <button id="opt-2" onclick="selectOption(2)" class="option-btn rounded-xl p-4 text-left flex items-center space-x-3 group">
+                        <span class="w-8 h-8 rounded-lg bg-blue-950 border border-blue-600/60 flex items-center justify-center font-bold text-amber-400 text-sm group-hover:border-amber-400 transition">C</span>
+                        <span id="opt-text-2" class="text-base sm:text-lg font-semibold flex-1 text-gray-100">विकल्प C</span>
+                    </button>
+
+                    <!-- Option D -->
+                    <button id="opt-3" onclick="selectOption(3)" class="option-btn rounded-xl p-4 text-left flex items-center space-x-3 group">
+                        <span class="w-8 h-8 rounded-lg bg-blue-950 border border-blue-600/60 flex items-center justify-center font-bold text-amber-400 text-sm group-hover:border-amber-400 transition">D</span>
+                        <span id="opt-text-3" class="text-base sm:text-lg font-semibold flex-1 text-gray-100">विकल्प D</span>
+                    </button>
+                </div>
+
+                <!-- ACTION LOCK BUTTON -->
+                <div class="pt-2 flex justify-center">
+                    <button id="lockBtn" onclick="lockAnswer()" disabled class="w-full sm:w-2/3 py-3.5 px-6 rounded-2xl bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed text-gray-950 font-black text-lg transition duration-200 shadow-gold-glow flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-lock"></i>
+                        <span id="lockBtnText">उत्तर पक्का गर्नुहोस् (Lock)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: Prize Ladder -->
+            <div id="ladderContainer" class="lg:col-span-4 bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl hidden lg:block">
+                <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
+                    <h4 class="text-base font-bold text-amber-400 flex items-center space-x-2">
+                        <i class="fa-solid fa-sack-dollar"></i>
+                        <span>पुरस्कारको सूची (Prize Ladder)</span>
+                    </h4>
+                    <span class="text-xs text-gray-400">१५ स्तर</span>
+                </div>
+
+                <div id="ladderList" class="space-y-1 text-sm font-semibold">
+                    <!-- Rendered dynamically -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+
+    <!-- MODAL 1: AUDIENCE POLL -->
+    <div id="pollModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border-2 border-blue-500/80 rounded-2xl p-6 max-w-md w-full shadow-blue-glow space-y-5">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                <h3 class="text-xl font-extrabold text-amber-400 flex items-center space-x-2">
+                    <i class="fa-solid fa-chart-column"></i>
+                    <span>दर्शक सर्वेक्षण नतिजा</span>
+                </h3>
+                <button onclick="closeModal('pollModal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <p class="text-xs text-gray-300">दर्शकसँग लिइएको द्रुत मतको नतिजा निम्नानुसार छ:</p>
+
+            <div id="pollBars" class="space-y-3 pt-2">
+                <!-- Dynamic Poll Bars -->
+            </div>
+
+            <button onclick="closeModal('pollModal')" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-white text-sm transition">
+                बन्द गर्नुहोस्
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL 2: PHONE A FRIEND -->
+    <div id="phoneModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border-2 border-amber-500/80 rounded-2xl p-6 max-w-md w-full shadow-gold-glow space-y-4">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                <h3 class="text-xl font-extrabold text-amber-400 flex items-center space-x-2">
+                    <i class="fa-solid fa-phone-volume animate-pulse text-emerald-400"></i>
+                    <span>साथीलाई फोन गरिएको छ...</span>
+                </h3>
+                <button onclick="closeModal('phoneModal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <div class="flex items-center space-x-4 bg-slate-800/80 p-3 rounded-xl">
+                <div class="w-14 h-14 rounded-full bg-amber-500/20 border-2 border-amber-400 flex items-center justify-center text-amber-300 text-2xl font-bold">
+                    <i class="fa-solid fa-user-astronaut"></i>
+                </div>
+                <div>
+                    <h4 id="friendName" class="font-bold text-white text-base">रामबहादुर श्रेष्ठ</h4>
+                    <p id="friendRole" class="text-xs text-amber-400">शिक्षक तथा इतिहास अध्येता</p>
+                </div>
+            </div>
+
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-gray-200 text-sm leading-relaxed min-h-[90px] flex items-center">
+                <p id="friendSpeech" class="italic">"हेलो! मलाई लाग्छ यसको उत्तर..."</p>
+            </div>
+
+            <button onclick="closeModal('phoneModal')" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 font-bold text-gray-950 text-sm transition">
+                धन्यवाद!
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL 3: ASK EXPERT -->
+    <div id="expertModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border-2 border-blue-400/80 rounded-2xl p-6 max-w-md w-full shadow-blue-glow space-y-4">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                <h3 class="text-xl font-extrabold text-blue-400 flex items-center space-x-2">
+                    <i class="fa-solid fa-user-graduate"></i>
+                    <span>विशेषज्ञको विचार</span>
+                </h3>
+                <button onclick="closeModal('expertModal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <div class="flex items-center space-x-3 bg-blue-950/60 p-3 rounded-xl border border-blue-800/50">
+                <div class="w-12 h-12 rounded-full bg-blue-600/30 border border-blue-400 flex items-center justify-center text-blue-300 text-xl font-bold">
+                    <i class="fa-solid fa-brain"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-white text-sm">प्रा. डा. ज्ञानबहादुर अधिकारी</h4>
+                    <p class="text-xs text-blue-300">सामान्य ज्ञान विज्ञ</p>
+                </div>
+            </div>
+
+            <p id="expertExplanation" class="text-sm text-gray-200 bg-slate-950 p-4 rounded-xl border border-slate-800 leading-relaxed">
+                तथ्य र प्रामाणिक स्रोतअनुसार यस प्रश्नको सही उत्तर...
+            </p>
+
+            <button onclick="closeModal('expertModal')" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-white text-sm transition">
+                म बुझेँ
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL 4: EXPLANATION / ANSWER REVEAL MODAL -->
+    <div id="explainModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border-2 border-amber-500/80 rounded-2xl p-6 max-w-lg w-full shadow-gold-glow space-y-4">
+            <div class="flex items-center space-x-3 border-b border-slate-800 pb-3">
+                <div id="resultStatusIcon" class="w-10 h-10 rounded-full flex items-center justify-center text-xl"></div>
+                <h3 id="resultStatusTitle" class="text-xl font-black text-white"></h3>
+            </div>
+
+            <div class="space-y-3">
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                    <p class="text-xs text-amber-400 font-semibold uppercase">सही उत्तर</p>
+                    <p id="explainCorrectText" class="text-lg font-bold text-emerald-400 mt-1"></p>
+                </div>
+
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                    <p class="text-xs text-gray-400 font-semibold uppercase">विवरण / तथ्य</p>
+                    <p id="explainDetailText" class="text-sm text-gray-200 mt-1 leading-relaxed"></p>
+
+                    <div id="explainSourceContainer" class="mt-3 pt-2 border-t border-slate-800/80 flex items-center space-x-2 text-[11px] text-gray-400">
+                        <i class="fa-solid fa-book-bookmark text-amber-400"></i>
+                        <span>स्रोत: <strong id="explainSourceText" class="text-gray-300"></strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <button id="nextQBtn" onclick="proceedNextQuestion()" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 font-black text-gray-950 text-base transition shadow-gold-glow">
+                अगाडि बढ्नुहोस्
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL 5: GAME OVER / WON SUMMARY MODAL -->
+    <div id="gameOverModal" class="fixed inset-0 bg-black/90 backdrop-blur-lg z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border-2 border-amber-500 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl text-center space-y-6">
+            <div class="w-20 h-20 mx-auto rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 p-1 shadow-gold-glow flex items-center justify-center">
+                <div class="w-full h-full bg-slate-950 rounded-full flex items-center justify-center">
+                    <i id="gameOverIcon" class="fa-solid fa-trophy text-4xl text-amber-400"></i>
+                </div>
+            </div>
+
+            <div>
+                <h3 id="gameOverTitle" class="text-2xl sm:text-3xl font-black text-white">खेल समाप्त भयो!</h3>
+                <p id="gameOverSub" class="text-sm text-gray-300 mt-1">तपाईंले राम्रो प्रयास गर्नुभयो।</p>
+            </div>
+
+            <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800 space-y-2">
+                <p class="text-xs text-gray-400 uppercase tracking-widest">तपाईंले जितेको कूल पुरस्कार रकम</p>
+                <p id="gameOverCash" class="text-3xl sm:text-4xl font-extrabold text-amber-400 tracking-tight">रु. ०</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 text-xs">
+                <div class="bg-slate-800/60 p-3 rounded-xl">
+                    <span class="text-gray-400 block">सही उत्तर</span>
+                    <span id="finalCorrectCount" class="text-lg font-bold text-emerald-400">० / १५</span>
+                </div>
+                <div class="bg-slate-800/60 p-3 rounded-xl">
+                    <span class="text-gray-400 block">सर्वोच्च जित</span>
+                    <span id="finalHighestWon" class="text-lg font-bold text-amber-400">रु. ०</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                <button onclick="shareResult()" class="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm border border-slate-700 transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-share-nodes text-amber-400"></i>
+                    <span>नतिजा सेयर गर्नुहोस्</span>
+                </button>
+                <button onclick="startGame()" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-gray-950 font-extrabold text-sm transition shadow-gold-glow">
+                    फेरि खेल्नुहोस्
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 6: PLAYER STATS -->
+    <div id="statsModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full space-y-5">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="text-xl font-bold text-amber-400 flex items-center space-x-2">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>व्यक्तिगत विवरण र तथ्याङ्क</span>
+                </h3>
+                <button onclick="closeModal('statsModal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <div class="space-y-3">
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-between items-center">
+                    <span class="text-gray-300 text-sm">खेलेको कूल खेल</span>
+                    <span id="statGamesPlayed" class="text-lg font-bold text-white">०</span>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-between items-center">
+                    <span class="text-gray-300 text-sm">सर्वोच्च पुरस्कार हासिल</span>
+                    <span id="statHighestPrize" class="text-lg font-bold text-amber-400">रु. ०</span>
+                </div>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-between items-center">
+                    <span class="text-gray-300 text-sm">कूल जित रकम</span>
+                    <span id="statTotalEarnings" class="text-lg font-bold text-emerald-400">रु. ०</span>
+                </div>
+            </div>
+
+            <button onclick="closeModal('statsModal')" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 font-bold text-white text-sm transition">
+                बन्द गर्नुहोस्
+            </button>
+        </div>
+    </div>
+
+    <!-- MOBILE LADDER DRAWER OVERLAY -->
+    <div id="mobileLadderDrawer" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 lg:hidden hidden flex flex-col justify-end">
+        <div class="bg-slate-900 border-t-2 border-amber-500 rounded-t-3xl p-5 max-h-[80vh] overflow-y-auto">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-3">
+                <h4 class="text-lg font-extrabold text-amber-400 flex items-center space-x-2">
+                    <i class="fa-solid fa-sack-dollar"></i>
+                    <span>पुरस्कार सूची</span>
+                </h4>
+                <button onclick="toggleMobileLadder()" class="text-gray-400 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-2xl"></i>
+                </button>
+            </div>
+            <div id="mobileLadderList" class="space-y-1"></div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="relative z-10 border-t border-gray-900 bg-gray-950/80 py-3 text-center text-xs text-gray-500">
+        <p>नेपाली के.बी.सी. (Nepali KBC) • नेपालको इतिहास, भूगोल र ज्ञानमा आधारित क्विज खेल</p>
+    </footer>
+
+    <script>
+        /* ==========================================================================
+           AUDIO SYNTHESIZER (Web Audio API - Works offline with zero dependencies)
+           ========================================================================== */
+        class SoundSystem {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) {
+                        this.ctx = new AudioContext();
+                    }
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playTone(freq, type, duration, gainVal = 0.1) {
+                if (!this.enabled) return;
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch(e) {}
+            }
+
+            playClick() {
+                this.playTone(600, 'sine', 0.08, 0.05);
+            }
+
+            playLock() {
+                if (!this.enabled) return;
+                this.playTone(300, 'sawtooth', 0.2, 0.08);
+                setTimeout(() => this.playTone(450, 'sine', 0.25, 0.08), 100);
+            }
+
+            playCorrect() {
+                if (!this.enabled) return;
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                notes.forEach((freq, idx) => {
+                    setTimeout(() => {
+                        this.playTone(freq, 'triangle', 0.35, 0.12);
+                    }, idx * 100);
+                });
+            }
+
+            playWrong() {
+                if (!this.enabled) return;
+                const notes = [220, 196, 174, 130];
+                notes.forEach((freq, idx) => {
+                    setTimeout(() => {
+                        this.playTone(freq, 'sawtooth', 0.3, 0.12);
+                    }, idx * 120);
+                });
+            }
+
+            playLifeline() {
+                if (!this.enabled) return;
+                this.playTone(880, 'sine', 0.15, 0.1);
+                setTimeout(() => this.playTone(1174.66, 'sine', 0.25, 0.1), 120);
+            }
+        }
+
+        const audio = new SoundSystem();
+
+        function toggleSound() {
+            audio.enabled = !audio.enabled;
+            const icon = document.getElementById('soundIcon');
+            if (audio.enabled) {
+                icon.className = "fa-solid fa-volume-high text-amber-400";
+            } else {
+                icon.className = "fa-solid fa-volume-xmark text-gray-500";
+            }
+        }
+
+        /* ==========================================================================
+           15-STAGE PRIZE LADDER DEFINITION
+           ========================================================================== */
+        const PRIZE_LADDER = [
+            { level: 1,  amount: "रु. १,०००",      numVal: 1000,    safe: false },
+            { level: 2,  amount: "रु. २,०००",      numVal: 2000,    safe: false },
+            { level: 3,  amount: "रु. ३,०००",      numVal: 3000,    safe: false },
+            { level: 4,  amount: "रु. ५,०००",      numVal: 5000,    safe: false },
+            { level: 5,  amount: "रु. १०,०००",     numVal: 10000,   safe: true  }, // Safe Level 1
+            { level: 6,  amount: "रु. २०,०००",     numVal: 20000,   safe: false },
+            { level: 7,  amount: "रु. ४०,०००",     numVal: 40000,   safe: false },
+            { level: 8,  amount: "रु. ८०,०००",     numVal: 80000,   safe: false },
+            { level: 9,  amount: "रु. १,६०,०००",   numVal: 160000,  safe: false },
+            { level: 10, amount: "रु. ३,२०,०००",   numVal: 320000,  safe: true  }, // Safe Level 2
+            { level: 11, amount: "रु. ६,४०,०००",   numVal: 640000,  safe: false },
+            { level: 12, amount: "रु. १२,५०,०००",  numVal: 1250000, safe: false },
+            { level: 13, amount: "रु. २५,००,०००",  numVal: 2500000, safe: false },
+            { level: 14, amount: "रु. ५०,००,०००",  numVal: 5000000, safe: false },
+            { level: 15, amount: "रु. १,००,००,०००", numVal: 10000000, safe: true } // 1 Crore!
+        ];
+
+        /* ==========================================================================
+           VERIFIED NEPALI QUESTION BANK (ORGANIZED BY DIFFICULTY 1 - 15)
+           ========================================================================== */
+        const QUESTION_BANK = {
+            1: [
+                {
+                    q: "नेपालको राजधानी शहर कुन हो?",
+                    opts: ["पोखरा", "काठमाडौँ", "विराटनगर", "ललितपुर"],
+                    ans: 1,
+                    exp: "नेपालको राजधानी शहर काठमाडौँ हो, जुन काठमाडौँ उपत्यकामा अवस्थित छ।",
+                    src: "नेपाल सरकार"
+                },
+                {
+                    q: "नेपालको राष्ट्रिय फूल कुन हो?",
+                    opts: ["कमल", "लालीगुराँस", "सयपत्री", "सुनगाभा"],
+                    ans: 1,
+                    exp: "नेपालको राष्ट्रिय फूल लालीगुराँस हो। यो उच्च पहाडी भूभागमा ढकमक्क फुल्छ।",
+                    src: "नेपाल पर्यटन बोर्ड"
+                },
+                {
+                    q: "संसारको सबैभन्दा अग्लो हिमशिखर सगरमाथा कुन देशमा पर्छ?",
+                    opts: ["भारत", "चीन", "नेपाल", "भुटान"],
+                    ans: 2,
+                    exp: "सगरमाथा (Mount Everest) नेपालको सोलुखुम्बु जिल्लामा अवस्थित छ।",
+                    src: "राष्ट्रिय नापी विभाग"
+                },
+                {
+                    q: "नेपालको राष्ट्रिय पक्षी कुन हो?",
+                    opts: ["मयुर", "डाँफे", "सुगा", "क्रेन"],
+                    ans: 1,
+                    exp: "नेपालको राष्ट्रिय पक्षी डाँफे (Lophophorus) हो, जुन बहुरङ्गी सुन्दर चरा हो।",
+                    src: "वन तथा भू-संरक्षण विभाग"
+                },
+                {
+                    q: "नेपालको राष्ट्रिय झण्डाको आकार कस्तो छ?",
+                    opts: ["चौकोना", "आयताकार", "दुई वटा त्रिकोण (दोहोरो त्रिकोण)", "वृत्ताकार"],
+                    ans: 2,
+                    exp: "विश्वमा नेपालको राष्ट्रिय झण्डा मात्रै आयताकार नभई दुई वटा त्रिकोण जोडिएको आकारको छ।",
+                    src: "नेपालको संविधान"
+                },
+                {
+                    q: "नेपालको आधिकारिक मुद्रा (Currency) के हो?",
+                    opts: ["नेपाली रूपैयाँ", "टका", "रुपिया", "दिनार"],
+                    ans: 0,
+                    exp: "नेपालको आधिकारिक मुद्रा नेपाली रूपैयाँ (NPR) हो।",
+                    src: "नेपाल राष्ट्र बैंक"
+                },
+                {
+                    q: "नेपालमा कागजी नोट निष्कासन गर्ने केन्द्रीय बैंक कुन हो?",
+                    opts: ["नेपाल बैंक लिमिटेड", "नेपाल राष्ट्र बैंक", "कृषि विकास बैंक", "राष्ट्रिय वाणिज्य बैंक"],
+                    ans: 1,
+                    exp: "नेपाल राष्ट्र बैंक देशको केन्द्रीय बैंक हो जसले मौद्रिक नीति र नोट निष्कासन नियन्त्रण गर्दछ।",
+                    src: "नेपाल राष्ट्र बैंक"
+                }
+            ],
+            2: [
+                {
+                    q: "भगवान गौतम बुद्धको जन्मस्थल लुम्बिनी नेपालको कुन जिल्लामा पर्छ?",
+                    opts: ["कपिलवस्तु", "रूपन्देही", "नवलपरासी", "चितवन"],
+                    ans: 1,
+                    exp: "शान्तिका दूत गौतम बुद्धको जन्मस्थल लुम्बिनी नेपालको रूपन्देही जिल्लामा पर्दछ।",
+                    src: "युनेस्को / लुम्बिनी विकास कोष"
+                },
+                {
+                    q: "नेपालको राष्ट्रिय जनावर कुन हो?",
+                    opts: ["एकसिङ्गे गैँडा", "हात्ती", "गाई", "पाटेबाघ"],
+                    ans: 2,
+                    exp: "नेपालको संविधानअनुसार नेपालको राष्ट्रिय जनावर गाई हो।",
+                    src: "नेपालको संविधान"
+                },
+                {
+                    q: "नेपालको अन्तर्राष्ट्रिय टेलिफोन कन्ट्री कोड के हो?",
+                    opts: ["+९१", "+९७७", "+१", "+८८०"],
+                    ans: 1,
+                    exp: "नेपालको अन्तर्राष्ट्रिय डायलिङ कोड +९७७ हो।",
+                    src: "नेपाल दूरसञ्चार प्राधिकरण"
+                },
+                {
+                    q: "पोखरा शहर कुन कास्की जिल्लाको प्रसिद्ध हिमशृङ्खलाको काखमा अवस्थित छ?",
+                    opts: ["अन्नपूर्ण", "गणेश", "लाङटाङ", "कञ्चनजङ्घा"],
+                    ans: 0,
+                    exp: "पोखरा शहर अन्नपूर्ण हिमशृङ्खला र माछापुच्छ्रे हिमालको मनोरम काखमा अवस्थित छ।",
+                    src: "नेपाल पर्यटन बोर्ड"
+                },
+                {
+                    q: "नेपालीहरूको मौलिक र परम्परागत राष्ट्रिय हतियार कुन हो?",
+                    opts: ["तलवार", "खुकुरी", "भाला", "धनुषबाण"],
+                    ans: 1,
+                    exp: "खुकुरी नेपाली वीर गोर्खालीहरूको पहिचान र परम्परागत राष्ट्रिय हतियार हो।",
+                    src: "नेपाली सेना/संस्कृति कोष"
+                },
+                {
+                    q: "नेपालको राष्ट्रिय गान 'सयौँ थुँगा फूलका' का सङ्गीतकार को हुन्?",
+                    opts: ["अम्बर गुरुङ", "नातिकाजी", "गोपाल योञ्जन", "शिवशङ्गर"],
+                    ans: 0,
+                    exp: "नेपालको राष्ट्रिय गानका सङ्गीतकार अम्बर गुरुङ हुन् भने रचनाकार ब्याकुल माइला हुन्।",
+                    src: "संस्कृति मन्त्रालय"
+                },
+                {
+                    q: "बागमती प्रदेशको राजधानी शहर कुन हो?",
+                    opts: ["काठमाडौँ", "हेटौँडा", "भरतपुर", "ललितपुर"],
+                    ans: 1,
+                    exp: "बागमती प्रदेशको प्रादेशिक राजधानी मकवानपुर जिल्लाको हेटौँडा शहर हो।",
+                    src: "बागमती प्रदेश सरकार"
+                }
+            ],
+            3: [
+                {
+                    q: "नेपाललाई प्रशासनिक हिसाबले कतिवटा प्रदेशमा विभाजन गरिएको छ?",
+                    opts: ["५ प्रदेश", "६ प्रदेश", "७ प्रदेश", "१४ प्रदेश"],
+                    ans: 2,
+                    exp: "नेपालको संविधान २०७२ अनुसार नेपाललाई ७ वटा सङ्घीय प्रदेशमा विभाजन गरिएको छ।",
+                    src: "नेपालको संविधान"
+                },
+                {
+                    q: "नेपालमा कूल कतिवटा जिल्लाहरू रहेका छन्?",
+                    opts: ["७५", "७६", "७७", "७८"],
+                    ans: 2,
+                    exp: "बि.सं. २०७४ मा रुकुम र नवलपरासीलाई विभाजन गरेपछि नेपालमा ७७ जिल्ला कायम भएका छन्।",
+                    src: "नेपाल सरकार सङ्घीय मामिला मन्त्रालय"
+                },
+                {
+                    q: "नेपालमा उज्यालो र बत्तीको पर्व भनेर कुन चाडलाई चिनिन्छ?",
+                    opts: ["दशैँ", "तिहार", "छठ", "होली"],
+                    ans: 1,
+                    exp: "तिहार (दीपावली) लाई उज्यालो र फूलहरूको मुख्य चाड मानिन्छ।",
+                    src: "नेपाली संस्कृति कोष"
+                },
+                {
+                    q: "क्षेत्रफलको हिसाबले नेपालको सबैभन्दा ठूलो जिल्ला कुन हो?",
+                    opts: ["हुम्ला", "डोल्पा", "मुस्ताङ", "सोलुखुम्बु"],
+                    ans: 1,
+                    exp: "डोल्पा जिल्ला ७,८८९ वर्ग किमी क्षेत्रफलका साथ नेपालको सबैभन्दा ठूलो जिल्ला हो।",
+                    src: "नापी विभाग"
+                },
+                {
+                    q: "क्षेत्रफलको हिसाबले नेपालको सबैभन्दा सानो जिल्ला कुन हो?",
+                    opts: ["ललितपुर", "भक्तपुर", "काठमाडौँ", "पर्वत"],
+                    ans: 1,
+                    exp: "भक्तपुर जिल्ला ११९ वर्ग किमी क्षेत्रफलका साथ नेपालको सबैभन्दा सानो जिल्ला हो।",
+                    src: "नापी विभाग"
+                },
+                {
+                    q: "नेपालको कुन धार्मिक स्थललाई 'मुक्ति क्षेत्र' को रूपमा पुजिन्छ?",
+                    opts: ["पशुपतिनाथ", "मुक्तिनाथ", "जनकपुर", "बराहक्षेत्र"],
+                    ans: 1,
+                    exp: "मुस्ताङ जिल्लामा अवस्थित मुक्तिनाथ मन्दिर हिन्दू र बौद्ध दुवै धर्मको पवित्र साझा तीर्थस्थल हो।",
+                    src: "पुरातत्व विभाग"
+                },
+                {
+                    q: "विश्वकै सबैभन्दा गहिरो गल्छी (Gorge) बनाउने नेपालको नदी कुन हो?",
+                    opts: ["कोशी", "कालीगण्डकी", "कर्णाली", "त्रिशूली"],
+                    ans: 1,
+                    exp: "कालीगण्डकी नदीले अन्नपूर्ण र धौलागिरी हिमालको बीचमा अन्धगल्छी बनाएको छ जुन विश्वकै गहिरो मानिन्छ।",
+                    src: "जल तथा मौसम विज्ञान विभाग"
+                }
+            ],
+            4: [
+                {
+                    q: "नेपालको सबैभन्दा लामो नदी कुन हो?",
+                    opts: ["कोशी", "गण्डकी", "कर्णाली", "बागमती"],
+                    ans: 2,
+                    exp: "कर्णाली नदी नेपालको सबैभन्दा लामो नदी हो, जसको लम्बाइ करिब ५०७ किमी रहेको छ।",
+                    src: "जल तथा मौसम विज्ञान विभाग"
+                },
+                {
+                    q: "नेपालको पहिलो राष्ट्रिय निकुञ्ज कुन हो?",
+                    opts: ["सगरमाथा राष्ट्रिय निकुञ्ज", "चितवन राष्ट्रिय निकुञ्ज", "बर्दिया राष्ट्रिय निकुञ्ज", "लाङटाङ राष्ट्रिय निकुञ्ज"],
+                    ans: 1,
+                    exp: "चितवन राष्ट्रिय निकुञ्ज बि.सं. २०३० (सन् १९७३) मा स्थापित नेपालको पहिलो राष्ट्रिय निकुञ्ज हो।",
+                    src: "राष्ट्रिय निकुञ्ज तथा वन्यजन्तु संरक्षण विभाग"
+                },
+                {
+                    q: "नेपालको राष्ट्रिय खेल कुन हो?",
+                    opts: ["फुटबल", "क्रिकेट", "भलिबल", "डण्डीबियो"],
+                    ans: 2,
+                    exp: "बि.सं. २०७४ जेठ ९ गतेको मन्त्रिपरिषद्को निर्णयले भलिबललाई नेपालको राष्ट्रिय खेल घोषित गरेको हो।",
+                    src: "युवा तथा खेलकुद मन्त्रालय"
+                },
+                {
+                    q: "क्षेत्रफलका आधारमा नेपालको सबैभन्दा ठूलो ताल कुन हो?",
+                    opts: ["फेवा ताल", "रारा ताल", "शे-फोक्सुण्डो ताल", "तिलिचो ताल"],
+                    ans: 1,
+                    exp: "मुगु जिल्लामा अवस्थित रारा ताल (१०.८ वर्ग किमी) क्षेत्रफलका आधारमा नेपालको सबैभन्दा ठूलो ताल हो।",
+                    src: "नेपाल पर्यटन बोर्ड"
+                },
+                {
+                    q: "नेपालको 'मन्दिरै मन्दिरको शहर' भनेर कुन शहरलाई चिनिन्छ?",
+                    opts: ["पाटन", "काठमाडौँ", "भक्तपुर", "जनकपुर"],
+                    ans: 1,
+                    exp: "प्रचुर सांस्कृतिक सम्पदा र ऐतिहासिक मन्दिरहरूका कारण काठमाडौँलाई मन्दिरै मन्दिरको शहर भनिन्छ।",
+                    src: "काठमाडौँ महानगरपालिका"
+                },
+                {
+                    q: "दुर्लभ 'एकसिङ्गे गैँडा' र 'पाटेबाघ' का लागि प्रसिद्ध नेपालको निकुञ्ज कुन हो?",
+                    opts: ["सगरमाथा निकुञ्ज", "चितवन राष्ट्रिय निकुञ्ज", "शिवपुरी निकुञ्ज", "खप्तड निकुञ्ज"],
+                    ans: 1,
+                    exp: "चितवन राष्ट्रिय निकुञ्ज दुर्लभ एकसिङ्गे गैँडा र पाटेबाघको प्रमुख प्राकृतिक बासस्थान हो।",
+                    src: "चितवन राष्ट्रिय निकुञ्ज कार्यालय"
+                },
+                {
+                    q: "नेपालको कुन वन्यजन्तु आरक्ष 'अर्ना' (Wild Water Buffalo) का लागि विश्वमै प्रसिद्ध छ?",
+                    opts: ["कोशी टप्पु वन्यजन्तु आरक्ष", "शुक्लाफाँटा", "पर्सा", "ढोरपाटन"],
+                    ans: 0,
+                    exp: "सप्तरी र सुनसरी जिल्लामा फैलिएको कोशी टप्पु वन्यजन्तु आरक्ष सङ्कटापन्न अर्नाको प्रमुख बासस्थान हो।",
+                    src: "वन तथा वातावरण मन्त्रालय"
+                }
+            ],
+            5: [
+                {
+                    q: "नेपालको कूल क्षेत्रफल कति वर्ग किलोमिटर रहेको छ?",
+                    opts: ["१,४७,१८१", "१,४७,५१६", "१,५१,१८१", "१,३७,१८१"],
+                    ans: 0,
+                    exp: "नेपालको आधिकारिक क्षेत्रफल १,४७,१८१ वर्ग किलोमिटर (५६,८२७ वर्ग माइल) रहेको छ।",
+                    src: "नापी विभाग, नेपाल सरकार"
+                },
+                {
+                    q: "नेपालको वर्तमान राष्ट्रिय गान 'सयौँ थुँगा फूलका' का रचनाकार (गीतकार) को हुन्?",
+                    opts: ["अम्बर गुरुङ", "लक्ष्मीप्रसाद देवकोटा", "ब्याकुल माइला", "माधवप्रसाद घिमिरे"],
+                    ans: 2,
+                    exp: "राष्ट्रिय गानका गीतकार प्रदीपकुमार राई (ब्याकुल माइला) हुन् भने सङ्गीतकार अम्बर गुरुङ हुन्।",
+                    src: "नेपाल सरकार संस्कृति मन्त्रालय"
+                },
+                {
+                    q: "प्रजातन्त्र स्थापना पश्चात् बि.सं. २००८ मा नेपालको पहिलो जननिर्वाचित वा नागरिक प्रधानमन्त्री को बनेका थिए?",
+                    opts: ["विश्वेश्वरप्रसाद कोइराला", "मातृकाप्रसाद कोइराला", "टङ्कप्रसाद आचार्य", "सूर्यबहादुर थापा"],
+                    ans: 1,
+                    exp: "राणाशासन अन्त्यपछि मातृकाप्रसाद कोइराला बि.सं. २००८ मंसीर १ मा प्रधानमन्त्री बनेका थिए।",
+                    src: "नेपालको संवैधानिक इतिहास"
+                },
+                {
+                    q: "आधुनिक नेपालको एकीकरण गर्ने ऐतिहासिक राजा को हुन्?",
+                    opts: ["राजा द्रव्य शाह", "राजा पृथ्वीनारायण शाह", "राजा प्रताप सिंह शाह", "राजा महेन्द्र"],
+                    ans: 1,
+                    exp: "गोर्खाका राजा पृथ्वीनारायण शाहले बाइसे-चौबिसे राज्यहरूलाई एकीकरण गरी आधुनिक नेपालको निर्माण गरेका थिए।",
+                    src: "नेपालको इतिहास"
+                },
+                {
+                    q: "काठमाडौँको प्रसिद्ध ऐतिहासिक धरहरा (भीमसेन स्तम्भ) कसले निर्माण गराएका थिए?",
+                    opts: ["जङ्गबहादुर राणा", "भीमसेन थापा", "रणबहादुर शाह", "प्रताप मल्ल"],
+                    ans: 1,
+                    exp: "प्रथम मुख्तियार भीमसेन थापाले बि.सं. १८८२ मा महारानी ललितत्रिपुरासुन्दरीको सम्झनामा धरहरा निर्माण गराएका थिए।",
+                    src: "पुरातत्व विभाग"
+                },
+                {
+                    q: "नेपालको पहिलो गणतान्त्रिक राष्ट्रपति को हुन्?",
+                    opts: ["डा. रामबरण यादव", "विद्यादेवी भण्डारी", "रामचन्द्र पौडेल", "परमानन्द झा"],
+                    ans: 0,
+                    exp: "गणतन्त्र स्थापना पश्चात् प्रथम संविधानसभाले डा. रामबरण यादवलाई नेपालको पहिलो राष्ट्रपति निर्वाचित गरेको थियो।",
+                    src: "राष्ट्रपति कार्यालय"
+                },
+                {
+                    q: "नेपालको पहिलो महिला प्रधानन्यायाधीश को हुन्?",
+                    opts: ["सुशीला कार्की", "सपना प्रधान मल्ल", "शारदा श्रेष्ठ", "इन्दिरा राना"],
+                    ans: 0,
+                    exp: "सुशीला कार्की बि.सं. २०७३ मा नेपालको सर्वोच्च अदालतको पहिलो महिला प्रधानन्यायाधीश बनेकी थिइन्।",
+                    src: "सर्वोच्च अदालत नेपाल"
+                }
+            ],
+            6: [
+                {
+                    q: "सगरमाथाको सफल आरोहण गर्ने प्रथम नेपाली महिला को हुन्?",
+                    opts: ["पासाङ ल्हामु शेर्पा", "लकापा शेर्पा", "सुष्मिता मास्के", "फुन्जो लामा"],
+                    ans: 0,
+                    exp: "पासाङ ल्हामु शेर्पाले बि.सं. २०५० वैशाख १० गते (२२ अप्रिल १९९३) सगरमाथाको सफल आरोहण गरेकी थिइन्।",
+                    src: "नेपाल पर्वतारोहण सङ्घ"
+                },
+                {
+                    q: "भारतमा प्रवेश गरेपछि 'बिहारको शोक' (Sorrow of Bihar) भनेर नेपालको कुन नदीलाई चिनिन्छ?",
+                    opts: ["कर्णाली", "गण्डकी", "कोशी", "महाकाली"],
+                    ans: 2,
+                    exp: "सप्तकोशी नदी वर्षायाममा धार परिवर्तन गरी बाढी ल्याउने भएकाले भारतमा 'बिहारको शोक' भनिन्छ।",
+                    src: "नेपाल जलस्रोत मन्त्रालय"
+                },
+                {
+                    q: "नेपाल कहिले औपचारिक रूपमा सङ्घीय लोकतान्त्रिक गणतन्त्र घोषित भएको थियो?",
+                    opts: ["बि.सं. २०६२ मंसीर ७", "बि.सं. २०६३ वैशाख ११", "बि.सं. २०६५ जेठ १५", "बि.सं. २०७२ असोज ३"],
+                    ans: 2,
+                    exp: "पहिलो संविधानसभाको पहिलो बैठकले बि.सं. २०६५ जेठ १५ गते नेपाललाई गणतन्त्र घोषित गरेको थियो।",
+                    src: "संविधानसभा अभिलेख"
+                },
+                {
+                    q: "नेपालको इतिहासमा प्रथम शहीद भनेर कसलाई मानिन्छ?",
+                    opts: ["शुक्रराज शास्त्री", "धर्मभक्त माथेमा", "लखन थापा", "दशरथ चन्द"],
+                    ans: 2,
+                    exp: "राणाशासन विरुद्ध विद्रोह गर्दा बि.सं. १९३३ मा प्राण आहुति दिने लखन थापालाई नेपालको प्रथम शहीद मानिन्छ।",
+                    src: "गृह मन्त्रालय नेपाल"
+                },
+                {
+                    q: "नेपाली साहित्यका आदिकवि भानुभक्त आचार्यको जन्म कुन जिल्लामा भएको थियो?",
+                    opts: ["कास्की", "तनहुँ", "गोर्खा", "पाल्पा"],
+                    ans: 1,
+                    exp: "आदिकवि भानुभक्त आचार्यको जन्म बि.सं. १८७१ मा तनहुँ जिल्लाको चुँडी रम्घामा भएको थियो।",
+                    src: "नेपाल प्रज्ञा-प्रतिष्ठान"
+                },
+                {
+                    q: "नारायणहिटी दरबारलाई सङ्ग्रहालयका रूपमा कहिले सर्वसाधारणका लागि खुला गरियो?",
+                    opts: ["बि.सं. २०६३", "बि.सं. २०६५", "बि.सं. २०६८", "बि.सं. २०७०"],
+                    ans: 1,
+                    exp: "राजतन्त्र अन्त्यपछि बि.सं. २०६५ फागुन १५ गते तत्कालीन प्रधानमन्त्रीले नारायणहिटी सङ्ग्रहालयको उद्घाटन गरेका थिए।",
+                    src: "पुरातत्व विभाग"
+                },
+                {
+                    q: "सगरमाथाको उचाइ फिट (Feet) मा कति रहेको छ?",
+                    opts: ["२९,०३१.७ फिट", "२८,००० फिट", "३०,१५० फिट", "२७,५०० फिट"],
+                    ans: 0,
+                    exp: "८,८४८.८६ मिटर उचाइलाई फिटमा रूपान्तरण गर्दा करिब २९,०३१.७ फिट हुन्छ।",
+                    src: "नापी विभाग"
+                }
+            ],
+            7: [
+                {
+                    q: "नेपाली साहित्यका महाकवि लक्ष्मीप्रसाद देवकोटाद्वारा रचित सर्वाधिक लोकप्रिय खण्डकाव्य कुन हो?",
+                    opts: ["मुना मदन", "सुलोचना", "शाकुन्तल", "कुञ्जिनी"],
+                    ans: 0,
+                    exp: "मुना मदन महाकवि देवकोटाको अमर खण्डकाव्य हो जसले नेपाली समाजको मर्मस्पर्शी कथा बोकेको छ।",
+                    src: "नेपाल प्रज्ञा-प्रतिष्ठान"
+                },
+                {
+                    q: "पोखरामा अवस्थित माछापुच्छ्रे हिमालको मनोरम प्रतिविम्ब देखिने प्रसिद्ध ताल कुन हो?",
+                    opts: ["रूपा ताल", "फेवा ताल", "बेगनास ताल", "शे-फोक्सुण्डो ताल"],
+                    ans: 1,
+                    exp: "फेवा ताल पोखराको मुख्य आकर्षण हो जसमा माछापुच्छ्रे हिमालको सुन्दर छायाँ देखिन्छ।",
+                    src: "नेपाल पर्यटन बोर्ड"
+                },
+                {
+                    q: "नेपालमा बनेको पहिलो कथानक (नेपाली) चलचित्र कुन हो?",
+                    opts: ["सत्य हरिश्चन्द्र", "आमा", "माइतीघर", "परालको आगो"],
+                    ans: 1,
+                    exp: "बि.सं. २०२१ मा बनेको 'आमा' चलचित्र नेपालमा निर्माण भएको पहिलो नेपाली कथानक चलचित्र हो।",
+                    src: "चलचित्र विकास बोर्ड"
+                },
+                {
+                    q: "जनकपुरदाममा रहेको भव्य 'जानकी मन्दिर' कुन शैलीमा निर्माण गरिएको छ?",
+                    opts: ["प्यागोडा शैली", "मुगल-राजपूत (सिख) शैली", "शिखर शैली", "स्तूप शैली"],
+                    ans: 1,
+                    exp: "जानकी मन्दिर प्राचीन मुगल र राजपूत वास्तुकलाको अनुपम समिश्रण शैलीमा निर्माण गरिएको छ।",
+                    src: "गुठी संस्थान नेपाल"
+                },
+                {
+                    q: "काठमाडौँ उपत्यकाकी जीवन्त देवी (Living Goddess) लाई के भनिन्छ?",
+                    opts: ["कुमारी", "तलेजु", "वज्रयोगिनी", "गुह्येश्वरी"],
+                    ans: 0,
+                    exp: "नेपालको नेवार संस्कृतिमा साक्षत् जीवित देवीका रूपमा श्री कुमारीको पूजाअर्चना गर्ने अद्वितीय परम्परा छ।",
+                    src: "संस्कृतिक अध्ययन संस्थान"
+                },
+                {
+                    q: "गोर्खा दरबार कुन ऐतिहासिक राजाको मूल दरबारका रूपमा प्रसिद्ध छ?",
+                    opts: ["राजा जयस्थिति मल्ल", "राजा पृथ्वीनारायण शाह", "राजा महेन्द्र", "राजा रणबहादुर"],
+                    ans: 1,
+                    exp: "गोर्खा दरबार शाहवंशीय राजा पृथ्वीनारायण शाह र उनका पूर्वजहरूको ऐतिहासिक थलो हो।",
+                    src: "पुरातत्व विभाग"
+                },
+                {
+                    q: "नेपालको कुन पूर्वी जिल्ला चिया उत्पादन र मनमोहक चियाबारीका लागि प्रसिद्ध छ?",
+                    opts: ["झापा", "इलाम", "पाँचथर", "धनकुटा"],
+                    ans: 1,
+                    exp: "इलाम जिल्ला गुणस्तरीय अर्गानिक चिया र सुन्दर चिया बगानका लागि विश्वभर प्रसिद्ध छ।",
+                    src: "नेपाल चिया तथा कफी विकास बोर्ड"
+                }
+            ],
+            8: [
+                {
+                    q: "नेपाल र इष्ट इन्डिया कम्पनी बीच ऐतिहासिक 'सुगौली सन्धि' कहिले हस्ताक्षर भएको थियो?",
+                    opts: ["सन् १८१४", "सन् १८१६", "सन् १८५७", "सन् १९२३"],
+                    ans: 1,
+                    exp: "सुगौली सन्धि सन् १८१६ मार्च ४ मा पूर्ण रूपमा अनुमोदन र लागू भएको थियो।",
+                    src: "नेपालको इतिहास - परराष्ट्र मन्त्रालय"
+                },
+                {
+                    q: "नेपालका प्रथम राणा प्रधानमन्त्री को हुन्?",
+                    opts: ["रणोद्दीप सिंह", "जङ्गबहादुर राणा", "वीर शम्शेर", "चन्द्र शम्शेर"],
+                    ans: 1,
+                    exp: "बि.सं. १९०३ को कोतपर्व पश्चात् जङ्गबहादुर राणा नेपालका प्रथम राणा प्रधानमन्त्री बनेका थिए।",
+                    src: "नेपालको इतिहास"
+                },
+                {
+                    q: "नेपालको प्रथम वैज्ञानिक भनेर कसलाई मानिन्छ?",
+                    opts: ["गेहेन्द्र शम्शेर", "रामचन्द्र पौडेल", "डा. महावीर पुन", "धर्मभक्त माथेमा"],
+                    ans: 0,
+                    exp: "गेहेन्द्र शम्शेर (वीर शम्शेरका छोरा) ले नेपालमै तोप, राइफल र बिजुली उत्पादन अनुसन्धान गरेका थिए।",
+                    src: "विज्ञान तथा प्रविधि मन्त्रालय"
+                },
+                {
+                    q: "नेपालको इतिहासमा दुखद् 'कोतपर्व' घटना कहिले घटेको थियो?",
+                    opts: ["बि.सं. १९०३ असोज २", "बि.सं. १९०७ फागुन ७", "बि.सं. १८८८ मंसीर ५", "बि.सं. १९१५ वैशाख १"],
+                    ans: 0,
+                    exp: "बि.सं. १९०३ असोज २ (१४ सेप्टेम्बर १८४६) मा कोतको आँगनमा १०० भन्दा बढी भारदारहरूको हत्या भएको थियो।",
+                    src: "नेपालको इतिहास"
+                },
+                {
+                    q: "नेपालको सबैभन्दा पुरानो समाचारपत्र 'गोरखापत्र' को प्रकाशन कहिलेदेखि सुरु भएको हो?",
+                    opts: ["बि.सं. १९५८ वैशाख २४", "बि.सं. २००७ फागुन ७", "बि.सं. २०१५ जेठ १", "बि.सं. १९९० माघ २"],
+                    ans: 0,
+                    exp: "राणा प्रधानमन्त्री देव शम्शेरको पालामा बि.सं. १९५८ वैशाख २४ मा गोरखापत्रको पहिलो अङ्क छापिएको थियो।",
+                    src: "गोरखापत्र संस्थान"
+                },
+                {
+                    q: "नेपालको पहिलो केबुलकार सेवा (Manakamana Cable Car) कहिले सञ्चालनमा आएको हो?",
+                    opts: ["बि.सं. २०५०", "बि.सं. २०५५", "बि.सं. २०६०", "बि.सं. २०६५"],
+                    ans: 1,
+                    exp: "बि.सं. २०५५ मंसीर ८ (सन् १९९८) मा कुरिनटारदेखि मनकामना मन्दिरसम्म पहिलो केबुलकार सुरु भएको हो।",
+                    src: "नेपाल पर्यटन बोर्ड"
+                },
+                {
+                    q: "काठमाडौँको प्रसिद्ध 'स्वयम्भूनाथ' महाचैत्यलाई अन्य कुन नामले पनि चिनिन्छ?",
+                    opts: ["White Temple", "Golden Temple", "Monkey Temple", "Cave Temple"],
+                    ans: 2,
+                    exp: "स्वयम्भूनाथ डाँडामा धेरै बाँदरहरू बसोबास गर्ने भएकाले विदेशी पर्यटकहरूबीच 'Monkey Temple' भनिन्छ।",
+                    src: "युनेस्को धरोहर"
+                }
+            ],
+            9: [
+                {
+                    q: "अन्नपूर्ण चक्र पदमार्गमा पर्ने ५,४१६ मिटरको उचाइमा रहेको प्रसिद्ध भञ्ज्याङ कुन हो?",
+                    opts: ["चो ला भञ्ज्याङ", "थोरङ ला भञ्ज्याङ", "लाके ला भञ्ज्याङ", "नाम्जा भञ्ज्याङ"],
+                    ans: 1,
+                    exp: "थोरङ ला भञ्ज्याङ (Thorong La Pass) मनाङ र मुस्ताङ जिल्लालाई जोड्ने विश्व प्रसिद्ध भञ्ज्याङ हो।",
+                    src: "नेपाल पर्वतारोहण सङ्घ"
+                },
+                {
+                    q: "नेपाल राष्ट्र बैंकका प्रथम गभर्नर को हुन्?",
+                    opts: ["लक्ष्मीनाथ गौतम", "हिमालय शम्शेर जबरा", "भेषबहादुर थापा", "गणेशबहादुर थापा"],
+                    ans: 1,
+                    exp: "नेपाल राष्ट्र बैंकको स्थापना (बि.सं. २०१३) हुँदा प्रथम गभर्नर हिमालय शम्शेर जबरा नियुक्त भएका थिए।",
+                    src: "नेपाल राष्ट्र बैंक"
+                },
+                {
+                    q: "नेपालको प्रामाणिक समय ग्रीनविच मानक समय (GMT) भन्दा कति छिटो छ?",
+                    opts: ["५ घण्टा ३० मिनेट", "५ घण्टा ४५ मिनेट", "६ घण्टा", "५ घण्टा १५ मिनेट"],
+                    ans: 1,
+                    exp: "नेपालको समय गौरीशङ्कर हिमाललाई आधार मानी GMT भन्दा ५ घण्टा ४५ मिनेट छिटो निर्धारण गरिएको छ।",
+                    src: "नापी विभाग नेपाल"
+                },
+                {
+                    q: "नेपालको समय निर्धारणका लागि कुन हिमाललाई आधार मानिएको छ?",
+                    opts: ["सगरमाथा", "माछापुच्छ्रे", "गौरीशङ्कर", "मनास्लु"],
+                    ans: 2,
+                    exp: "दोलखा जिल्लामा रहेको गौरीशङ्कर हिमाल (८६° १५' पूर्वी देशान्तर) लाई आधार मानी समय निर्धारण गरिएको छ।",
+                    src: "नापी विभाग"
+                },
+                {
+                    q: "कर्णाली प्रदेशको प्रसिद्ध 'शे-फोक्सुण्डो ताल' कुन जिल्लामा अवस्थित छ?",
+                    opts: ["मुगु", "डोल्पा", "जुम्ला", "हुम्ला"],
+                    ans: 1,
+                    exp: "शे-फोक्सुण्डो ताल डोल्पा जिल्लामा रहेको नेपालको अति सुन्दर ओलीभ-ब्लु रङको हिमाली ताल हो।",
+                    src: "नेपाल पर्यटन बोर्ड"
+                },
+                {
+                    q: "नेपालको प्रथम महिला मन्त्री को हुन्?",
+                    opts: ["द्वारिकादेवी ठाकुरानी", "साधना प्रधान", "शैलजा आचार्य", "कमला पन्त"],
+                    ans: 0,
+                    exp: "बि.सं. २०१६ मा बनेको बी.पी. कोइरालाको सरकारमा द्वारिकादेवी ठाकुरानी स्वास्थ्य उपमन्त्री बनेकी थिइन्।",
+                    src: "संसदीय अभिलेख"
+                },
+                {
+                    q: "नेपालमा सर्वप्रथम कागजी नोट कहिले जारी गरिएको थियो?",
+                    opts: ["बि.सं. २००२ असोज १", "बि.सं. २००७ फागुन ७", "बि.सं. २०१३ वैशाख १४", "बि.सं. १९९० माघ २"],
+                    ans: 0,
+                    exp: "राजा त्रिभुवनका पालामा सदर मुलुकीखानाबाट बि.सं. २००२ असोज १ मा ५, १० र १०० का नोट निष्कासन भएका थिए।",
+                    src: "नेपाल राष्ट्र बैंक मुद्रा सङ्ग्रहालय"
+                }
+            ],
+            10: [
+                {
+                    q: "नेपाली साहित्यको प्रतिष्ठित 'मदन पुरस्कार' प्राप्त गर्ने प्रथम महिला साहित्यकार को हुन्?",
+                    opts: ["झमक घिमिरे", "पारिजात", "राधा पौडेल", "नीलम कार्की निहारिका"],
+                    ans: 1,
+                    exp: "पारिजातले बि.सं. २०२२ मा आफ्नो प्रसिद्ध उपन्यास 'शिरीषको फूल' का लागि मदन पुरस्कार प्राप्त गरेकी थिइन्।",
+                    src: "मदन पुरस्कार गुठी"
+                },
+                {
+                    q: "विश्वमा रहेका १४ वटा ८,००० मिटरभन्दा अग्ला हिमालहरूमध्ये नेपालमा कतिवटा पर्छन्?",
+                    opts: ["६ वटा", "७ वटा", "८ वटा", "१० वटा"],
+                    ans: 2,
+                    exp: "विश्वका १४ वटा अग्ला हिमालमध्ये सगरमाथा, कञ्चनजङ्घा, ल्होत्से, मकालु, चोयु, धौलागिरी, मनास्लु र अन्नपूर्ण गरी ८ वटा नेपालमा छन्।",
+                    src: "नेपाल पर्वतारोहण सङ्घ"
+                },
+                {
+                    q: "नेपालका कुन दुई जिल्लाहरूले भारत र चीन दुवै छिमेकी देशलाई छुन्छन्?",
+                    opts: ["झापा र कञ्चनपुर", "ताप्लेजुङ र दार्चुला", "हुम्ला र मुस्ताङ", "सोलुखुम्बु र सङ्खुवासभा"],
+                    ans: 1,
+                    exp: "पूर्वीरुपमा ताप्लेजुङ र पश्चिमीरुपमा दार्चुला जिल्लाले भारत र चीन दुवै देशको सिमाना छुन्छन्।",
+                    src: "नापी विभाग"
+                },
+                {
+                    q: "भक्तपुरको प्रसिद्ध ५५ झ्याले दरबार र न्यातपोल मन्दिर कसले निर्माण गराएका हुन्?",
+                    opts: ["राजा भूपतीन्द्र मल्ल", "राजा यक्ष मल्ल", "राजा प्रताप मल्ल", "राजा सिद्धिनरसिंह मल्ल"],
+                    ans: 0,
+                    exp: "भक्तपुरका मल्ल राजा भूपतीन्द्र मल्लले ५५ झ्याले दरबार र पाँचतले न्यातपोल मन्दिर निर्माण गराएका थिए।",
+                    src: "पुरातत्व विभाग"
+                },
+                {
+                    q: "सगरमाथा राष्ट्रिय निकुञ्जलाई युनेस्कोले कहिले विश्व सम्पदा सूचीमा सूचीकृत गरेको थियो?",
+                    opts: ["सन् १९७९", "सन् १९८४", "सन् १९९०", "सन् १९९५"],
+                    ans: 0,
+                    exp: "सगरमाथा राष्ट्रिय निकुञ्ज सन् १९७९ मा युनेस्कोको प्राकृतिक विश्व सम्पदा सूचीमा सूचीकृत भएको हो।",
+                    src: "युनेस्को / UNESCO"
+                },
+                {
+                    q: "काठमाडौँ र पोखरा जोड्ने प्रसिद्ध राजमार्ग 'पृथ्वी राजमार्ग' को कूल लम्बाइ कति छ?",
+                    opts: ["१७४ किमी", "१-७४ किमी", "२०० किमी", "२२० किमी"],
+                    ans: 0,
+                    exp: "नौबिसेदेखि पोखरासम्मको पृथ्वी राजमार्गको कूल लम्बाइ १७४ किलोमिटर रहेको छ।",
+                    src: "सडक विभाग"
+                },
+                {
+                    q: "भक्तपुरमा नयाँ वर्षको अवसरमा मनाइने प्रसिद्ध ऐतिहासिक जात्रा कुन हो?",
+                    opts: ["इन्द्रजात्रा", "बिस्केट जात्रा", "घोडेजात्रा", "मच्छिन्द्रनाथ जात्रा"],
+                    ans: 1,
+                    exp: "बिस्केट जात्रा भक्तपुरमा विक्रम संवत्को नयाँ वर्षका अवसरमा रथ तानेर मनाइने प्रसिद्ध ऐतिहासिक पर्व हो।",
+                    src: "संस्कृति संस्थान"
+                }
+            ],
+            11: [
+                {
+                    q: "पोखराको अनदु डाँडामा निर्मित 'विश्व शान्ति स्तूप' (Peace Pagoda) कुन देशका बौद्ध भिक्षुहरूको सहयोगमा निर्माण भएको हो?",
+                    opts: ["थाइल्यान्ड", "जापान", "श्रीलङ्का", "चीन"],
+                    ans: 1,
+                    exp: "पोखराको विश्व शान्ति स्तूप जापानी बौद्ध भिक्षु निप्पोनजान म्योहोजी र स्थानीय नागरिकको सहयोगमा बनेको हो।",
+                    src: "पुरातत्व विभाग"
+                },
+                {
+                    q: "आदिकवि भानुभक्त आचार्यलाई रामायण नेपालीमा अनुवाद गर्ने प्रेरणा दिने उनका बाजेको नाम के हो?",
+                    opts: ["श्रीकृष्ण आचार्य", "धनञ्जय आचार्य", "पद्मपाणि आचार्य", "उमाकान्त आचार्य"],
+                    ans: 1,
+                    exp: "भानुभक्तका बाजे धनञ्जय आचार्यले उनलाई घाँसीको कथाबाट प्रेरित भई धर्म र यश कमाउने प्रेरणा दिएका थिए।",
+                    src: "नेपाली साहित्य इतिहास"
+                },
+                {
+                    q: "नेपालले सर्वप्रथम कुन ओलम्पिक खेलकुद प्रतियोगितामा आधिकारिक भाग लिएको थियो?",
+                    opts: ["सन् १९५२ हेलसिन्की", "सन् १९६४ टोकियो", "सन् १९७२ म्युनिख", "सन् १९८० मस्को"],
+                    ans: 1,
+                    exp: "नेपालले सन् १९६४ मा टोकियो ओलम्पिकमा दुई धावक (भूपेन्द्र सिलवाल र गंगाबहादुर थापा) सहित पहिलोपटक सहभागिता जनाएको थियो।",
+                    src: "नेपाल ओलम्पिक कमिटी"
+                },
+                {
+                    q: "विश्वको आठौँ अग्लो हिमाल मनास्लु (Manaslu) को उचाइ कति मिटर रहेको छ?",
+                    opts: ["८,१६३ मिटर", "८,१६७ मिटर", "८,५१६ मिटर", "८,०९१ मिटर"],
+                    ans: 0,
+                    exp: "गोरखा जिल्लामा अवस्थित मनास्लु हिमालको उचाइ ८,१६३ मिटर रहेको छ।",
+                    src: "नेपाल पर्वतारोहण सङ्घ"
+                },
+                {
+                    q: "बि.सं. २०३१ मा श्री ५ महाराजाधिराज वीरेन्द्रबाट नेपाललाई के घोषणा गर्ने प्रस्ताव गरिएको थियो?",
+                    opts: ["शान्ति क्षेत्र", "पर्यटन क्षेत्र", "हरित क्षेत्र", "जलस्रोत क्षेत्र"],
+                    ans: 0,
+                    exp: "राजा वीरेन्द्रले आफ्नो शुभराज्याभिषेकका अवसरमा सन् १९७५ (बि.सं. २०३१) मा नेपाललाई शान्ति क्षेत्र घोषणाको प्रस्ताव गरेका थिए।",
+                    src: "नेपाल परराष्ट्र इतिहास"
+                },
+                {
+                    q: "काठमाडौँको प्रसिद्ध ऐतिहासिक 'रानीपोखरी' कसले निर्माण गराएका हुन्?",
+                    opts: ["राजा प्रताप मल्ल", "राजा जयप्रकाश मल्ल", "राजा महेन्द्र मल्ल", "राजा रत्न मल्ल"],
+                    ans: 0,
+                    exp: "काठमाडौँका राजा प्रताप मल्लले बि.सं. १७२७ मा कान्छा छोरा चक्रवर्तेन्द्र मल्लको निधनमा रानीको शोक निवारणका लागि रानीपोखरी बनाएका थिए।",
+                    src: "पुरातत्व विभाग"
+                },
+                {
+                    q: "नेपालको सबैभन्दा अग्लो स्थानमा रहेको ताल कुन हो?",
+                    opts: ["रारा ताल", "तिलिचो ताल / कजिन सारा", "फेवा ताल", "गोसाइँकुण्ड"],
+                    ans: 1,
+                    exp: "मनाङमा अवस्थित तिलिचो ताल (४,९१९ मी) र पछिल्लो खोज अनुसार कजिन सारा ताल उच्च स्थानमा रहेका ताल हुन्।",
+                    src: "नापी विभाग"
+                }
+            ],
+            12: [
+                {
+                    q: "ऐतिहासिक काठमाडौँको प्रसिद्ध 'काष्ठमण्डप' कुन ऐतिहासिक कालमा निर्माण भएको प्रामाणिक खोजले देखाउँछ?",
+                    opts: ["मल्लकाल", "लिच्छविकाल", "शाहकाल", "किराँतकाल"],
+                    ans: 1,
+                    exp: "पुरातात्विक उत्खनन र कार्बन डेटिङ अनुसार काष्ठमण्डपको निर्माण ७ औँ शताब्दी (लिच्छविकाल) मा भएको पुष्टि भएको छ।",
+                    src: "पुरातत्व विभाग नेपाल"
+                },
+                {
+                    q: "नेपालको सबैभन्दा तल्लो उचाइ (२,४५७ मी) मा अवस्थित प्रसिद्ध हिमनदी (Glacier) कुन हो?",
+                    opts: ["खुम्बु हिमनदी", "कापुचे हिमनदी", "लङ्टाङ हिमनदी", "चोयु हिमनदी"],
+                    ans: 1,
+                    exp: "कास्की जिल्लामा रहेको कापुचे हिमताल/हिमनदी विश्वकै सबैभन्दा कम उचाइमा रहेको जमा हिमनदी मानिन्छ।",
+                    src: "नेपाल भौगोलिक महासङ्घ"
+                },
+                {
+                    q: "वंसावली अनुसार काठमाडौँ उपत्यकामा शासन गर्ने पहिलो किराँती राजा को थिए?",
+                    opts: ["जितेदास्ती", "यलम्बर", "हस्तसुब्बा", "गस्ती"],
+                    ans: 1,
+                    exp: "नेपालको प्राचीन इतिहास अनुसार राजा यलम्बर किराँत वंशका प्रथम राजा थिए।",
+                    src: "नेपालको प्राचीन इतिहास"
+                },
+                {
+                    q: "काठमाडौँ उपत्यकामा शासन गर्ने प्रथम गोपालवंशी राजा को थिए?",
+                    opts: ["भुक्तमान (भूमिगुप्त)", "जयगुप्त", "परमगुप्त", "धर्मगुप्त"],
+                    ans: 0,
+                    exp: "गोपाल वंशावली अनुसार काठमाडौँ उपत्यकामा प्रथम शासकका रूपमा भूक्तमान (भूमिगुप्त) ले राज्य गरेका थिए।",
+                    src: "नेपालको इतिहास"
+                },
+                {
+                    q: "विश्व सम्पदा सूचीमा सूचीकृत प्रसिद्ध 'चाँगुनारायण मन्दिर' कुन लिच्छविकालीन राजाले निर्माण गराएका थिए?",
+                    opts: ["राजा मानदेव", "राजा अंशुवर्मा", "राजा शिवदेव", "राजा वसन्तदेव"],
+                    ans: 0,
+                    exp: "भक्तपुरमा रहेको चाँगुनारायण मन्दिर लिच्छवी राजा मानदेवले निर्माण गराएका हुन् जहाँ नेपालकै सबैभन्दा पुरानो प्रामाणिक अभिलेख छ।",
+                    src: "पुरातत्व विभाग"
+                },
+                {
+                    q: "काठमाडौँको हनुमानढोका दरबार परिसरमा रहेको प्रसिद्ध 'तलेजु भवानी मन्दिर' कसले निर्माण गराएका हुन्?",
+                    opts: ["महेंद्र मल्ल", "प्रताप मल्ल", "रत्न मल्ल", "जयस्थिति मल्ल"],
+                    ans: 0,
+                    exp: "बि.सं. १६१६ मा काठमाडौँका राजा महेन्द्र मल्लले तलेजु भवानीको भव्य प्यागोडा शैलीको मन्दिर बनाएका थिए।",
+                    src: "पुरातत्व विभाग"
+                },
+                {
+                    q: "काठमाडौँ उपत्यकाको सुख्खा र खडेरी अन्त्यका लागि रातो मच्छिन्द्रनाथको जात्रा कसले चलाएका थिए?",
+                    opts: ["राजा नरेन्द्रदेव", "राजा गुणकामदेव", "राजा मानदेव", "राजा शिवदेव"],
+                    ans: 0,
+                    exp: "लिच्छविकालीन राजा नरेन्द्रदेव र गुरु बन्धुदत्तले कामरू कामाक्षबाट रातो मच्छिन्द्रनाथ ल्याई जात्रा सुरु गराएका थिए।",
+                    src: "संस्कृति मन्त्रालय"
+                }
+            ],
+            13: [
+                {
+                    q: "काठमाडौँ उपत्यकाको सभ्यताको आधार मानिने पवित्र बागमती नदीको उद्गम स्थल कहाँ छ?",
+                    opts: ["गोसाइँकुण्ड", "वाग्द्वार (शिवपुरी)", "दामन", "सुन्दरीजल"],
+                    ans: 1,
+                    exp: "बागमती नदी काठमाडौँको उत्तरी भागमा रहेको शिवपुरी पहाडको 'वाग्द्वार' बाट उत्पत्ति हुन्छ।",
+                    src: "बागमती सभ्यता एकीकृत विकास समिति"
+                },
+                {
+                    q: "नेपालको पहिलो आधुनिक विद्यालय 'दरबार हाइस्कुल' को स्थापना बि.सं. १९१० मा कुन राणा प्रधानमन्त्रीले गराएका थिए?",
+                    opts: ["रणोद्दीप सिंह", "जङ्गबहादुर राणा", "देव शम्शेर", "चन्द्र शम्शेर"],
+                    ans: 1,
+                    exp: "विदेशी भ्रमणबाट फर्केपछि जङ्गबहादुर राणाले बि.सं. १९१० असोज २७ गते दरबार हाइस्कुल स्थापना गरेका थिए।",
+                    src: "शिक्षा मन्त्रालय नेपाल"
+                },
+                {
+                    q: "नेपालको पहिलो जलविद्युत् आयोजना 'फरपिङ जलविद्युत्' (Chandrajyoti) को स्थापना कहिले भएको थियो?",
+                    opts: ["बि.सं. १९५०", "बि.सं. १९६८", "बि.सं. २००७", "बि.सं. २०१५"],
+                    ans: 1,
+                    exp: "बि.सं. १९६८ जेठ ९ गते (सन् १९११) राजा पृथ्वीवीरविक्रम र प्रधानमन्त्री चन्द्र शम्शेरको पालामा ५०० किलोवाटको फरपिङ पावरहाउस सुरु भएको थियो।",
+                    src: "नेपाल विद्युत प्राधिकरण"
+                },
+                {
+                    q: "नेपालको पहिलो त्रिभुवन विश्वविद्यालय (TU) को स्थापना कहिले भएको थियो?",
+                    opts: ["बि.सं. २००७", "बि.सं. २०१६", "बि.सं. २०२५", "बि.सं. २०३०"],
+                    ans: 1,
+                    exp: "नेपालको सबैभन्दा पुरानो विश्वविद्यालय त्रिभुवन विश्वविद्यालय बि.सं. २०१६ आषाढ १६ गते स्थापना भएको हो।",
+                    src: "त्रिभुवन विश्वविद्यालय"
+                },
+                {
+                    q: "काठमाडौँको ऐतिहासिक 'त्रि-चन्द्र कलेज' को स्थापना कुन राणा प्रधानमन्त्रीले गरेका थिए?",
+                    opts: ["देव शम्शेर", "चन्द्र शम्शेर", "वीर शम्शेर", "जोध शम्शेर"],
+                    ans: 1,
+                    exp: "बि.सं. १९७५ मा उच्च शिक्षाका लागि तत्कालीन प्रधानमन्त्री चन्द्र शम्शेरले त्रि-चन्द्र कलेज स्थापना गराएका थिए।",
+                    src: "त्रि-चन्द्र कलेज"
+                },
+                {
+                    q: "नेपालको सबैभन्दा पुरानो सरकारी अस्पताल 'वीर अस्पताल' को स्थापना कहिले भएको थियो?",
+                    opts: ["बि.सं. १९४६", "बि.सं. १९६०", "बि.सं. १९९०", "बि.सं. २००१"],
+                    ans: 0,
+                    exp: "वीर शम्शेरले बि.सं. १९४६ साउन १२ गते वीर अस्पतालको स्थापना गरेका थिए।",
+                    src: "स्वास्थ्य मन्त्रालय"
+                },
+                {
+                    q: "प्राचीन कालमा नेपाली कलाकार अरानिको (Araniko) ककसको नेतृत्वमा चीन गएका थिए?",
+                    opts: ["८० जना नेपाली कालिगड", "५० जना", "१०० जना", "२० जना"],
+                    ans: 0,
+                    exp: "बि.सं. १३१७ मा अरानिको ८० जना नेपाली कालीगडहरूको टोलीसहित चीन गई श्वेत चैत्य निर्माण गरेका थिए।",
+                    src: "नेपाल इतिहास कोष"
+                }
+            ],
+            14: [
+                {
+                    q: "सन् २०२० मा नेपाल र चीनद्वारा संयुक्त रूपमा सार्वजनिक गरिएको सगरमाथाको आधिकारिक नयाँ उचाइ कति हो?",
+                    opts: ["८,८४८ मिटर", "८,८४८.८६ मिटर", "८,८५० मिटर", "८,८४४.४३ मिटर"],
+                    ans: 1,
+                    exp: "२०२० डिसेम्बर ८ मा नेपाल र चीनले संयुक्त नापी पश्चात् सगरमाथाको उचाइ ८,८४८.८६ मिटर रहेको घोषणा गरेका थिए।",
+                    src: "नापी विभाग, नेपाल सरकार"
+                },
+                {
+                    q: "नेपाल कहिले संयुक्त राष्ट्रसङ्घ (UN) को औपचारिक १५५ औँ सदस्य राष्ट्र बनेको थियो?",
+                    opts: ["सन् १९४५ अक्टोबर २४", "सन् १९५५ डिसेम्बर १४", "सन् १९६० जनवरी १", "सन् १९५० जुलाई १५"],
+                    ans: 1,
+                    exp: "नेपाल सन् १९५५ डिसेम्बर १४ मा 'प्याकेज डिल' अन्तर्गत संयुक्त राष्ट्रसङ्घको पूर्ण सदस्य बनेको थियो।",
+                    src: "परराष्ट्र मन्त्रालय नेपाल / UN Org"
+                },
+                {
+                    q: "नेपालको पहिलो रङ्गीन कथानक चलचित्र कुन हो?",
+                    opts: ["आमा", "कुमारी", "सिन्दूर", "काँछी"],
+                    ans: 1,
+                    exp: "बि.सं. २०३४ मा निर्माण भएको 'कुमारी' चलचित्र नेपालको पहिलो रङ्गीन चलचित्र हो।",
+                    src: "चलचित्र विकास बोर्ड"
+                },
+                {
+                    q: "नेपालमा पहिलो बालिग मताधिकारमा आधारित आम निर्वाचन कहिले भएको थियो?",
+                    opts: ["बि.सं. २००७", "बि.सं. २०१५ फागुन ७", "बि.सं. २०४८", "बि.सं. २०५६"],
+                    ans: 1,
+                    exp: "नेपालको इतिहासमा प्रथम आम निर्वाचन बि.सं. २०१५ फागुन ७ गते प्रतिनिधिसभाका लागि भएको थियो।",
+                    src: "निर्वाचन आयोग नेपाल"
+                },
+                {
+                    q: "दक्षिण एशियाली क्षेत्रीय सहयोग सङ्गठन (SAARC) को सचिवालय कहाँ अवस्थित छ?",
+                    opts: ["नयाँ दिल्ली", "काठमाडौँ", "कोलम्बो", "ढाका"],
+                    ans: 1,
+                    exp: "सार्कको केन्द्रीय सचिवालय काठमाडौँको ठमेल मार्गमा अवस्थित छ जसको उद्घाटन सन् १९८७ मा भएको हो।",
+                    src: "सार्क सचिवालय"
+                },
+                {
+                    q: "नेपालका प्रथम प्रधानन्यायाधीश (Chief Justice) को बनेका थिए?",
+                    opts: ["हरिप्रसाद प्रधान", "अनिरुद्धप्रसाद सिंह", "रत्नबहादुर बिष्ट", "नयनबहादुर खत्री"],
+                    ans: 0,
+                    exp: "नेपालको प्रधान न्यायालय ऐन २००८ जारी भएपछि हरिप्रसाद प्रधान प्रथम प्रधानन्यायाधीश नियुक्त भएका थिए।",
+                    src: "सर्वोच्च अदालत"
+                },
+                {
+                    q: "युनेस्कोको विश्व सम्पदा सूचीमा नेपालका कतिवटा सम्पदा क्षेत्रहरू सूचीकृत छन्?",
+                    opts: ["४ वटा", "१० वटा", "७ वटा", "१२ वटा"],
+                    ans: 0,
+                    exp: "नेपालका ४ वटा सम्पदा क्षेत्रहरू (काठमाडौँ उपत्यका, लुम्बिनी, चितवन निकुञ्ज, र सगरमाथा निकुञ्ज) युनेस्को सूचीमा छन्।",
+                    src: "युनेस्को नेपाल"
+                }
+            ],
+            15: [
+                {
+                    q: "नेपाल-अंग्रेज युद्ध (१८१४-१८१६) पश्चात् सुगौली सन्धि अनुसार काठमाडौँमा नियुक्त प्रथम बेलायती आवासीय प्रतिनिधि (British Resident) को थिए?",
+                    opts: ["ब्रेन हड्सन (Brian Hodgson)", "एडवर्ड गार्डनर (Edward Gardner)", "कर्नल नोक्स (Colonel Knox)", "आर्चिबाल्ड क्याम्पबेल"],
+                    ans: 1,
+                    exp: "सुगौली सन्धि पछि सन् १८१६ मा काठमाडौँ दरबारमा बेलायती आवासीय प्रतिनिधिको रूपमा एडवर्ड गार्डनर नियुक्त भएका थिए।",
+                    src: "नेपाल-बेलायत कूटनीतिक इतिहास"
+                },
+                {
+                    q: "लिच्छविकालमा गाउँ वा ग्राम तहको प्रमुख प्रशासकीय अधिकारीलाई के भनिन्थ्यो?",
+                    opts: ["सामन्त", "ग्रामिणी", "विषयपति", "प्रधान"],
+                    ans: 1,
+                    exp: "लिच्छवि कालीन शासन व्यवस्थामा गाउँ (ग्राम) को प्रमुख व्यक्ति/प्रशासकलाई 'ग्रामिणी' वा 'प्रधान' भनिन्थ्यो।",
+                    src: "नेपालको लिच्छवि कालीन इतिहास"
+                },
+                {
+                    q: "बि.सं. २००९ मा राजा त्रिभुवनका पालामा नेपालमा प्रथम कागजी नोट निष्कासन हुँदा सही गर्ने प्रथम खजाञ्ची को थिए?",
+                    opts: ["हिमालय शम्शेर", "जनकराज शर्मा", "नरेन्द्रराज", "सत्यन्द्रप्यारा श्रेष्ठ"],
+                    ans: 1,
+                    exp: "नेपाल राष्ट्र बैंक स्थापना हुनु अघि सदर मुलुकीखानाबाट नोट जारी हुँदा खजाञ्ची जनकराज शर्माले सही गरेका थिए।",
+                    src: "नेपाल राष्ट्र बैंक मुद्रा संग्रहालय"
+                },
+                {
+                    q: "नेपाल र भारत बीच ऐतिहासिक 'शान्ति तथा मैत्री सन्धि' (Treaty of Peace and Friendship) कहिले हस्ताक्षर भएको थियो?",
+                    opts: ["सन् १९५० जुलाई ३१", "सन् १९४७ अगस्ट १५", "सन् १९५५ डिसेम्बर १४", "सन् १९६० जनवरी १"],
+                    ans: 0,
+                    exp: "काठमाडौँमा सन् १९५० जुलाई ३१ (बि.सं. २००७ साउन १६) मा नेपाल-भारत शान्ति तथा मैत्री सन्धिमा हस्ताक्षर भएको थियो।",
+                    src: "परराष्ट्र मन्त्रालय नेपाल"
+                },
+                {
+                    q: "काठमाडौँ उपत्यकाको प्राचीन नाम 'कान्तिपुर' हुनुअघि नेवारी भाषामा के भनिन्थ्यो?",
+                    opts: ["येँ (Yen) / यम्बु", "खोपः", "यल", "मध्यदेश"],
+                    ans: 0,
+                    exp: "काठमाडौँ उपत्यकाको उत्तरी भागलाई 'यम्बु' र दक्षिणी भागलाई 'यल' भनिन्थ्यो; नेवारीमा आज पनि 'येँ' भनिन्छ।",
+                    src: "नेपाल प्राचीन सांस्कृतिक इतिहास"
+                },
+                {
+                    q: "प्राचीन नेपालको इतिहासमा मानाङ्क (Mananka) नामको प्रथम धातुको मुद्रा चलाउने राजा को हुन्?",
+                    opts: ["राजा मानदेव", "राजा अंशुवर्मा", "राजा गुणकामदेव", "राजा जितेदास्ती"],
+                    ans: 0,
+                    exp: "लिच्छवि राजा मानदेवले पाचौँ शताब्दीमा आफ्नो नाम र श्री भोगिनी अङ्कित 'मानाङ्क' तामाको सिक्का चलाएका थिए।",
+                    src: "नेपाल राष्ट्र बैंक मुद्रा संग्रहालय"
+                },
+                {
+                    q: "नेपालले कुन देशसँग सर्वप्रथम औपचारिक कूटनीतिक सम्बन्ध (Diplomatic Relations) स्थापना गरेको थियो?",
+                    opts: ["भारत", "संयुक्त अधिराज्य (UK/बेलायत)", "चीन", "अमेरिका"],
+                    ans: 1,
+                    exp: "नेपाल र बेलायत (UK) बीच सन् १८१६ मा सुगौली सन्धि पश्चात् सर्वप्रथम कूटनीतिक सम्बन्ध स्थापना भएको थियो।",
+                    src: "परराष्ट्र मन्त्रालय नेपाल"
+                }
+            ]
+        };
+
+        /* ==========================================================================
+           GAME STATE MANAGEMENT & SESSION QUESTION TRACKER
+           ========================================================================== */
+        let usedQuestionsMap = {}; // Tracks used question indices per level in current session
+
+        let gameState = {
+            currentLevel: 1,          // 1 to 15
+            questions: [],             // Selected 15 questions for current run
+            currentQ: null,            // Current question object
+            selectedOpt: null,         // Player selected option index
+            isLocked: false,           // Has locked answer
+            eliminatedOpts: [],        // 50:50 eliminated indices
+            lifelines: {
+                '5050': true,
+                'poll': true,
+                'phone': true,
+                'expert': true
+            },
+            stats: {
+                gamesPlayed: 0,
+                highestPrize: 0,
+                totalEarnings: 0
+            }
+        };
+
+        // Load saved stats from localStorage
+        function loadStats() {
+            const saved = localStorage.getItem('nepali_kbc_stats');
+            if (saved) {
+                try {
+                    gameState.stats = JSON.parse(saved);
+                } catch(e) {}
+            }
+            updateStatsUI();
+        }
+
+        function saveStats() {
+            localStorage.setItem('nepali_kbc_stats', JSON.stringify(gameState.stats));
+            updateStatsUI();
+        }
+
+        function updateStatsUI() {
+            document.getElementById('statGamesPlayed').innerText = gameState.stats.gamesPlayed;
+            document.getElementById('statHighestPrize').innerText = "रु. " + gameState.stats.highestPrize.toLocaleString('ne-NP');
+            document.getElementById('statTotalEarnings').innerText = "रु. " + gameState.stats.totalEarnings.toLocaleString('ne-NP');
+        }
+
+        // Initialize and Pick 1 Question for Each Level (1-15) avoiding immediate repetitions
+        function startGame() {
+            audio.playClick();
+
+            // Reset Lifelines State
+            gameState.lifelines = { '5050': true, 'poll': true, 'phone': true, 'expert': true };
+            updateLifelinesUI();
+
+            // Select 15 Questions (1 per level) with non-repeating logic
+            gameState.questions = [];
+            for (let lvl = 1; lvl <= 15; lvl++) {
+                const pool = QUESTION_BANK[lvl];
+                
+                if (!usedQuestionsMap[lvl]) {
+                    usedQuestionsMap[lvl] = [];
+                }
+
+                // Filter out questions already used in previous recent rounds
+                let unusedIndices = [];
+                for (let i = 0; i < pool.length; i++) {
+                    if (!usedQuestionsMap[lvl].includes(i)) {
+                        unusedIndices.push(i);
+                    }
+                }
+
+                // If all questions in this level were played, reset tracker for this level
+                if (unusedIndices.length === 0) {
+                    usedQuestionsMap[lvl] = [];
+                    for (let i = 0; i < pool.length; i++) {
+                        unusedIndices.push(i);
+                    }
+                }
+
+                // Pick a random index from remaining unused pool
+                const selectedUnusedIndex = unusedIndices[Math.floor(Math.random() * unusedIndices.length)];
+                usedQuestionsMap[lvl].push(selectedUnusedIndex);
+
+                const picked = pool[selectedUnusedIndex];
+                
+                // Shuffle options while preserving correct answer
+                const shuffledObj = shuffleOptions(picked);
+                gameState.questions.push(shuffledObj);
+            }
+
+            gameState.currentLevel = 1;
+            gameState.stats.gamesPlayed++;
+            saveStats();
+
+            // Switch Screen
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('gameOverModal').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+
+            renderLadder();
+            loadQuestion(1);
+        }
+
+        // Helper: Shuffle options array and keep track of correct answer
+        function shuffleOptions(qObj) {
+            const origOpts = [...qObj.opts];
+            const correctText = origOpts[qObj.ans];
+
+            // Shuffle
+            const shuffledOpts = [...origOpts].sort(() => Math.random() - 0.5);
+            const newAnsIndex = shuffledOpts.indexOf(correctText);
+
+            return {
+                q: qObj.q,
+                opts: shuffledOpts,
+                ans: newAnsIndex,
+                exp: qObj.exp,
+                src: qObj.src
+            };
+        }
+
+        // Render Prize Ladder UI
+        function renderLadder() {
+            const listContainer = document.getElementById('ladderList');
+            const mobileContainer = document.getElementById('mobileLadderList');
+            let html = '';
+
+            for (let i = 15; i >= 1; i--) {
+                const item = PRIZE_LADDER[i - 1];
+                let activeClass = "";
+                let badge = "";
+
+                if (i === gameState.currentLevel) {
+                    activeClass = "active shadow-blue-glow";
+                } else if (i < gameState.currentLevel) {
+                    activeClass = "passed opacity-60";
+                }
+
+                if (item.safe) {
+                    badge = `<span class="badge-safe text-[10px] px-1.5 py-0.5 rounded ml-2 font-bold uppercase">सुरक्षित</span>`;
+                }
+
+                html += `
+                    <div class="ladder-item ${activeClass} ${item.safe ? 'safe' : 'text-gray-300'} flex items-center justify-between p-2 rounded-xl text-xs sm:text-sm">
+                        <span class="w-6 text-gray-400 font-mono">${i}.</span>
+                        <span class="flex-1 text-left font-bold ${i === gameState.currentLevel ? 'text-amber-400' : ''}">${item.amount}</span>
+                        ${badge}
+                    </div>
+                `;
+            }
+
+            listContainer.innerHTML = html;
+            mobileContainer.innerHTML = html;
+        }
+
+        // Load Question for specific level
+        function loadQuestion(lvlIndex) {
+            gameState.currentLevel = lvlIndex;
+            gameState.currentQ = gameState.questions[lvlIndex - 1];
+            gameState.selectedOpt = null;
+            gameState.isLocked = false;
+            gameState.eliminatedOpts = [];
+
+            const qData = gameState.currentQ;
+            const ladderInfo = PRIZE_LADDER[lvlIndex - 1];
+
+            // Update UI elements
+            document.getElementById('currentQNumBadge').innerText = lvlIndex;
+            document.getElementById('currentQProgress').innerText = `प्रश्न ${lvlIndex} / १५`;
+            document.getElementById('currentQValue').innerText = ladderInfo.amount;
+
+            document.getElementById('questionText').innerText = qData.q;
+
+            // Reset options buttons
+            for (let i = 0; i < 4; i++) {
+                const btn = document.getElementById(`opt-${i}`);
+                const txt = document.getElementById(`opt-text-${i}`);
+                btn.className = "option-btn rounded-xl p-4 text-left flex items-center space-x-3 group";
+                txt.innerText = qData.opts[i];
+            }
+
+            // Lock Button reset
+            const lockBtn = document.getElementById('lockBtn');
+            lockBtn.disabled = true;
+            document.getElementById('lockBtnText').innerText = "उत्तर छान्नुहोस्";
+
+            renderLadder();
+        }
+
+        // Option Selection Handler
+        function selectOption(index) {
+            if (gameState.isLocked) return;
+            if (gameState.eliminatedOpts.includes(index)) return;
+
+            audio.playClick();
+            gameState.selectedOpt = index;
+
+            // Update UI selected state
+            for (let i = 0; i < 4; i++) {
+                if (gameState.eliminatedOpts.includes(i)) continue;
+                const btn = document.getElementById(`opt-${i}`);
+                if (i === index) {
+                    btn.className = "option-btn selected rounded-xl p-4 text-left flex items-center space-x-3 group";
+                } else {
+                    btn.className = "option-btn rounded-xl p-4 text-left flex items-center space-x-3 group";
+                }
+            }
+
+            const lockBtn = document.getElementById('lockBtn');
+            lockBtn.disabled = false;
+            document.getElementById('lockBtnText').innerText = "उत्तर पक्का गर्नुहोस् (Lock)";
+        }
+
+        // Lock Answer Action
+        function lockAnswer() {
+            if (gameState.selectedOpt === null || gameState.isLocked) return;
+
+            gameState.isLocked = true;
+            audio.playLock();
+
+            const lockBtn = document.getElementById('lockBtn');
+            lockBtn.disabled = true;
+            document.getElementById('lockBtnText').innerText = "प्रतिक्षा गर्नुहोस्...";
+
+            const selectedBtn = document.getElementById(`opt-${gameState.selectedOpt}`);
+            selectedBtn.className = "option-btn locked rounded-xl p-4 text-left flex items-center space-x-3 group";
+
+            // Suspense Delay before reveal (2 Seconds)
+            setTimeout(() => {
+                revealAnswer();
+            }, 1800);
+        }
+
+        // Reveal Answer & Show Explanation
+        function revealAnswer() {
+            const correctIndex = gameState.currentQ.ans;
+            const isCorrect = (gameState.selectedOpt === correctIndex);
+
+            const selectedBtn = document.getElementById(`opt-${gameState.selectedOpt}`);
+            const correctBtn = document.getElementById(`opt-${correctIndex}`);
+
+            if (isCorrect) {
+                audio.playCorrect();
+                selectedBtn.className = "option-btn correct rounded-xl p-4 text-left flex items-center space-x-3 group";
+            } else {
+                audio.playWrong();
+                selectedBtn.className = "option-btn wrong rounded-xl p-4 text-left flex items-center space-x-3 group";
+                correctBtn.className = "option-btn correct rounded-xl p-4 text-left flex items-center space-x-3 group";
+            }
+
+            // Show Result Explanation Modal after a brief pause
+            setTimeout(() => {
+                showExplanationModal(isCorrect);
+            }, 1200);
+        }
+
+        // Display Explanation Popup
+        function showExplanationModal(isCorrect) {
+            const q = gameState.currentQ;
+            const icon = document.getElementById('resultStatusIcon');
+            const title = document.getElementById('resultStatusTitle');
+
+            if (isCorrect) {
+                icon.className = "w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-400 text-emerald-400 flex items-center justify-center text-xl";
+                icon.innerHTML = `<i class="fa-solid fa-check"></i>`;
+                title.innerText = "बधाई छ! सही उत्तर!";
+                title.className = "text-xl font-black text-emerald-400";
+            } else {
+                icon.className = "w-10 h-10 rounded-full bg-red-500/20 border border-red-400 text-red-400 flex items-center justify-center text-xl";
+                icon.innerHTML = `<i class="fa-solid fa-xmark"></i>`;
+                title.innerText = "क्षमा गर्नुहोस्! गलत उत्तर!";
+                title.className = "text-xl font-black text-red-400";
+            }
+
+            document.getElementById('explainCorrectText').innerText = q.opts[q.ans];
+            document.getElementById('explainDetailText').innerText = q.exp;
+            document.getElementById('explainSourceText').innerText = q.src;
+
+            const nextBtn = document.getElementById('nextQBtn');
+            if (isCorrect) {
+                if (gameState.currentLevel === 15) {
+                    nextBtn.innerText = "करोडपति पुरस्कार ग्रहण गर्नुहोस्!";
+                } else {
+                    nextBtn.innerText = "अर्को प्रश्नमा जानुहोस्";
+                }
+            } else {
+                nextBtn.innerText = "खेल नतिजा हेर्नुहोस्";
+            }
+
+            document.getElementById('explainModal').classList.remove('hidden');
+        }
+
+        // Proceed to Next Question or Trigger Game Over
+        function proceedNextQuestion() {
+            closeModal('explainModal');
+
+            const isCorrect = (gameState.selectedOpt === gameState.currentQ.ans);
+
+            if (isCorrect) {
+                if (gameState.currentLevel === 15) {
+                    // Won 1 Crore!
+                    endGame(true, 10000000);
+                } else {
+                    // Next level
+                    loadQuestion(gameState.currentLevel + 1);
+                }
+            } else {
+                // Game Over - Calculate Safe Level Prize
+                let safeEarnings = 0;
+                if (gameState.currentLevel > 10) {
+                    safeEarnings = PRIZE_LADDER[9].numVal; // Rs. 3,20,000
+                } else if (gameState.currentLevel > 5) {
+                    safeEarnings = PRIZE_LADDER[4].numVal; // Rs. 10,000
+                } else {
+                    safeEarnings = 0;
+                }
+                endGame(false, safeEarnings);
+            }
+        }
+
+        // Quit Game Early
+        function confirmQuit() {
+            if (confirm("के तपाईं हालसम्म जितेको रकम लिएर खेल छोड्न चाहनुहुन्छ?")) {
+                let wonVal = 0;
+                if (gameState.currentLevel > 1) {
+                    wonVal = PRIZE_LADDER[gameState.currentLevel - 2].numVal;
+                }
+                endGame(false, wonVal, true);
+            }
+        }
+
+        // End Game Handler
+        function endGame(isGrandWin, cashWon, isQuit = false) {
+            // Update Stats
+            if (cashWon > gameState.stats.highestPrize) {
+                gameState.stats.highestPrize = cashWon;
+            }
+            gameState.stats.totalEarnings += cashWon;
+            saveStats();
+
+            document.getElementById('gameOverCash').innerText = "रु. " + cashWon.toLocaleString('ne-NP');
+            document.getElementById('finalCorrectCount').innerText = `${gameState.currentLevel - (isGrandWin ? 0 : 1)} / १५`;
+            document.getElementById('finalHighestWon').innerText = "रु. " + gameState.stats.highestPrize.toLocaleString('ne-NP');
+
+            const title = document.getElementById('gameOverTitle');
+            const sub = document.getElementById('gameOverSub');
+            const icon = document.getElementById('gameOverIcon');
+
+            if (isGrandWin) {
+                title.innerText = "अभिवादन! तपाईं बन्नुभयो करोडपति!";
+                sub.innerText = "तपाईंले १५ वटै प्रश्नहरूको सही उत्तर दिएर रु. १ करोड जित्नुभएको छ।";
+                icon.className = "fa-solid fa-crown text-4xl text-amber-300 animate-bounce";
+            } else if (isQuit) {
+                title.innerText = "खेल सुरक्षितसाथ समाप्त भयो!";
+                sub.innerText = "तपाईंले खेल छाडेर जित्नुभएको पुरस्कार रकम निम्नानुसार छ।";
+                icon.className = "fa-solid fa-handshake text-4xl text-emerald-400";
+            } else {
+                title.innerText = "खेल समाप्त भयो!";
+                sub.innerText = "गलत उत्तरका कारण खेल समाप्त भएको छ।";
+                icon.className = "fa-solid fa-heart-crack text-4xl text-red-400";
+            }
+
+            document.getElementById('gameOverModal').classList.remove('hidden');
+        }
+
+        /* ==========================================================================
+           LIFELINES LOGIC
+           ========================================================================== */
+        function useLifeline(type) {
+            if (!gameState.lifelines[type] || gameState.isLocked) return;
+
+            audio.playLifeline();
+            gameState.lifelines[type] = false;
+            updateLifelinesUI();
+
+            const q = gameState.currentQ;
+
+            if (type === '5050') {
+                // Eliminate 2 wrong options
+                const wrongIndices = [0, 1, 2, 3].filter(i => i !== q.ans);
+                // Shuffle wrong indices and pick 2
+                const toEliminate = wrongIndices.sort(() => Math.random() - 0.5).slice(0, 2);
+                gameState.eliminatedOpts = toEliminate;
+
+                toEliminate.forEach(idx => {
+                    const btn = document.getElementById(`opt-${idx}`);
+                    btn.className = "option-btn eliminated rounded-xl p-4 text-left flex items-center space-x-3";
+                });
+            } 
+            else if (type === 'poll') {
+                // Audience Poll Generation
+                showAudiencePoll();
+            } 
+            else if (type === 'phone') {
+                // Phone A Friend Simulation
+                showPhoneAFriend();
+            } 
+            else if (type === 'expert') {
+                // Ask Expert
+                showExpertOpinion();
+            }
+        }
+
+        function updateLifelinesUI() {
+            for (let key in gameState.lifelines) {
+                const btn = document.getElementById(`lifeline-${key}`);
+                if (btn) {
+                    btn.disabled = !gameState.lifelines[key];
+                }
+            }
+        }
+
+        // Audience Poll Simulation
+        function showAudiencePoll() {
+            const correctIdx = gameState.currentQ.ans;
+            const lvl = gameState.currentLevel;
+
+            // Generate realistic weighted percentages based on difficulty
+            let correctPct = Math.max(35, 85 - (lvl * 3)); // Higher questions = lower audience certainty
+            let remaining = 100 - correctPct;
+
+            let pcts = [0, 0, 0, 0];
+            pcts[correctIdx] = correctPct;
+
+            // Distribute remaining among other options
+            let wrongIndices = [0, 1, 2, 3].filter(i => i !== correctIdx && !gameState.eliminatedOpts.includes(i));
+            
+            wrongIndices.forEach((idx, i) => {
+                if (i === wrongIndices.length - 1) {
+                    pcts[idx] = remaining;
+                } else {
+                    let share = Math.floor(Math.random() * (remaining / 1.5));
+                    pcts[idx] = share;
+                    remaining -= share;
+                }
+            });
+
+            // Build Poll UI Bars
+            const labels = ['A', 'B', 'C', 'D'];
+            let html = '';
+
+            for (let i = 0; i < 4; i++) {
+                const isEliminated = gameState.eliminatedOpts.includes(i);
+                const pctVal = isEliminated ? 0 : pcts[i];
+
+                html += `
+                    <div>
+                        <div class="flex justify-between text-xs font-bold text-gray-200 mb-1">
+                            <span>विकल्प ${labels[i]}: ${gameState.currentQ.opts[i]}</span>
+                            <span>${pctVal}%</span>
+                        </div>
+                        <div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                            <div class="h-full bg-gradient-to-r from-blue-500 to-amber-400 rounded-full transition-all duration-1000" style="width: ${pctVal}%"></div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('pollBars').innerHTML = html;
+            document.getElementById('pollModal').classList.remove('hidden');
+        }
+
+        // Phone a Friend Simulation
+        function showPhoneAFriend() {
+            const q = gameState.currentQ;
+            const correctLetter = ['A', 'B', 'C', 'D'][q.ans];
+            const lvl = gameState.currentLevel;
+
+            const friends = [
+                { name: "रामबहादुर श्रेष्ठ", role: "शिक्षक तथा भूगोल अध्येता" },
+                { name: "डा. सुनिता के.सी.", role: "विश्वविद्यालय प्राध्यापक" },
+                { name: "अमित पोखरेल", role: "क्विज प्रतियोगी तथा इतिहासप्रेमी" }
+            ];
+
+            const pickedFriend = friends[Math.floor(Math.random() * friends.length)];
+            document.getElementById('friendName').innerText = pickedFriend.name;
+            document.getElementById('friendRole').innerText = pickedFriend.role;
+
+            let confidence = Math.max(40, 95 - (lvl * 3.5));
+            let speech = "";
+
+            if (Math.random() * 100 <= confidence) {
+                speech = `"हेलो! मैले प्रश्न सुनेँ। म लगभग निश्चित छु कि यसको सही उत्तर विकल्प **${correctLetter} (${q.opts[q.ans]})** नै हो।"`;
+            } else {
+                let wrongOptions = [0, 1, 2, 3].filter(i => i !== q.ans && !gameState.eliminatedOpts.includes(i));
+                let guessedWrong = wrongOptions[Math.floor(Math.random() * wrongOptions.length)];
+                let guessedLetter = ['A', 'B', 'C', 'D'][guessedWrong];
+                speech = `"प्रश्न अलि अप्ठ्यारो रहेछ। म पूर्ण निश्चित त छैन, तर मलाई लाग्छ विकल्प **${guessedLetter} (${q.opts[guessedWrong]})** हुन सक्छ।"`;
+            }
+
+            document.getElementById('friendSpeech').innerHTML = speech;
+            document.getElementById('phoneModal').classList.remove('hidden');
+        }
+
+        // Ask Expert Simulation
+        function showExpertOpinion() {
+            const q = gameState.currentQ;
+            const correctLetter = ['A', 'B', 'C', 'D'][q.ans];
+
+            const text = `प्रामाणिक अध्ययन र तथ्यअनुसार, यस प्रश्नको सही उत्तर **विकल्प ${correctLetter}: ${q.opts[q.ans]}** हो। <br/><br/><span class="text-xs text-blue-300">कार्यात्मक तथ्य: ${q.exp}</span>`;
+
+            document.getElementById('expertExplanation').innerHTML = text;
+            document.getElementById('expertModal').classList.remove('hidden');
+        }
+
+        /* ==========================================================================
+           UTILITY FUNCTIONS
+           ========================================================================== */
+        function closeModal(id) {
+            audio.playClick();
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function toggleMobileLadder() {
+            audio.playClick();
+            const drawer = document.getElementById('mobileLadderDrawer');
+            drawer.classList.toggle('hidden');
+        }
+
+        function showStatsModal() {
+            audio.playClick();
+            document.getElementById('statsModal').classList.remove('hidden');
+        }
+
+        function goToHome() {
+            if (confirm("के तपाईं मुख्य पृष्ठमा फर्कन चाहनुहुन्छ?")) {
+                document.getElementById('gameScreen').classList.add('hidden');
+                document.getElementById('welcomeScreen').classList.remove('hidden');
+            }
+        }
+
+        // Share result using Web Share API or Clipboard Fallback
+        function shareResult() {
+            const text = `मैले 'नेपाली के.बी.सी.' खेलमा ${document.getElementById('gameOverCash').innerText} जित्न सफल भएँ! तपाईं पनि खेल्नुहोस् र आफ्नो ज्ञान जाँच्नुहोस्!`;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: 'नेपाली के.बी.सी.',
+                    text: text,
+                    url: window.location.href
+                }).catch(() => {});
+            } else {
+                // Clipboard fallback
+                const dummy = document.createElement('textarea');
+                document.body.appendChild(dummy);
+                dummy.value = text;
+                dummy.select();
+                document.execCommand('copy');
+                document.body.removeChild(dummy);
+                alert("नतिजा क्लिपबोर्डमा कपी भयो!");
+            }
+        }
+
+        // On Load initialization
+        window.onload = function() {
+            loadStats();
+        };
+    </script>
+</body>
+</html>
